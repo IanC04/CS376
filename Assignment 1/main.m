@@ -1,0 +1,1 @@
+imshow("Assignment1_pics\ut.jpg")
