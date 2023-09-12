@@ -1,3 +1,6 @@
 # exclude figures in output
 **.fig
 **.asv
+**.log
+**.aux
+**.gz
