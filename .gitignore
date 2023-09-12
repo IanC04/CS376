@@ -1,2 +1,2 @@
-# exclude output
+# exclude figures in output
 **.fig
