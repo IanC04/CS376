@@ -106,24 +106,23 @@ title("Original(600×800×3)")
 
 subplot(3, 4, 2);
 picture = gsw_image;
-picture = removeVertical(picture, 200);
 picture = removeHorizontal(picture, 200);
 imshow(picture);
-title("200 Vertical then 200 Horizontal Seam Resizing(400×600×3)");
+title("200 Horizontal Seams Resizing(400×800×3)");
 
 subplot(3, 4, 3);
 picture = gsw_image;
 [r, c] = size(picture, [1  2]);
-picture = imresize(picture, [r c] - 200, "nearest");
+picture = imresize(picture, [r-200 c], "nearest");
 imshow(picture);
-title("Nearest Neighbor Resizing(400×600×3)");
+title("Nearest Neighbor Resizing(400×800×3)");
 
 subplot(3, 4, 4);
 picture = gsw_image;
 [r, c] = size(picture, [1  2]);
-picture = imresize(picture, [r c] - 200, "bicubic");
+picture = imresize(picture, [r-200 c], "bicubic");
 imshow(picture);
-title("Bicubic Interpolation Resizing(400×600×3)");
+title("Bicubic Interpolation Resizing(400×800×3)");
 
 subplot(3, 4, 5);
 imshow(memory_image);
@@ -132,23 +131,22 @@ title("Original(221×300×3)")
 subplot(3, 4, 6);
 picture = memory_image;
 picture = removeVertical(picture, 100);
-picture = removeHorizontal(picture, 100);
 imshow(picture);
-title("100 Vertical then 100 Horizontal Seam Resizing(121×200×3)");
+title("100 Vertical Seams Resizing(221×200×3)");
 
 subplot(3, 4, 7);
 picture = memory_image;
 [r, c] = size(picture, [1  2]);
-picture = imresize(picture, [r c] - 100, "nearest");
+picture = imresize(picture, [r c-100], "nearest");
 imshow(picture);
-title("Nearest Neighbor Resizing(121×200×3)");
+title("Nearest Neighbor Resizing(221×200×3)");
 
 subplot(3, 4, 8);
 picture = memory_image;
 [r, c] = size(picture, [1  2]);
-picture = imresize(picture, [r c] - 100, "bicubic");
+picture = imresize(picture, [r c-100], "bicubic");
 imshow(picture);
-title("Bicubic Interpolation Resizing(121×200×3)");
+title("Bicubic Interpolation Resizing(221×200×3)");
 
 subplot(3, 4, 9);
 imshow(toucan_image);
@@ -157,25 +155,25 @@ title("Original(419×640×3)")
 subplot(3, 4, 10);
 picture = toucan_image;
 picture = removeVertical(picture, 100);
-picture = removeHorizontal(picture, 100);
 imshow(picture);
-title("100 Vertical then 100 Horizontal Seam Resizing(319×540×3)");
+title("100 Vertical Seams Resizing(419×540×3)");
 
 subplot(3, 4, 11);
 picture = toucan_image;
 [r, c] = size(picture, [1  2]);
-picture = imresize(picture, [r c] - 100, "nearest");
+picture = imresize(picture, [r c-100], "nearest");
 imshow(picture);
-title("Nearest Neighbor Resizing(319×540×3)");
+title("Nearest Neighbor Resizing(419×540×3)");
 
 subplot(3, 4, 12);
 picture = toucan_image;
 [r, c] = size(picture, [1  2]);
-picture = imresize(picture, [r c] - 100, "bicubic");
+picture = imresize(picture, [r c-100], "bicubic");
 imshow(picture);
-title("Bicubic Interpolation Resizing(319×540×3)");
+title("Bicubic Interpolation Resizing(419×540×3)");
 %}
 
+%{
 % Question 5 All Seams Highlighted
 
 figure("Name","All Removed Seams");
@@ -215,3 +213,4 @@ title("Highlighted Seams");
 subplot(3,3,9);
 imshow(image);
 title("Resulting Image");
+%}
