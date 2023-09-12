@@ -1,14 +1,14 @@
 clear all
 clc
 
-im=imread('Input/Prague.jpg');
+im=imread('Input/ut.jpg');
 
 energyImg = energy_img(im);
 
 nim=im;
 nen=energyImg;
 for i=1:50
-    i
+    i;
     [nim,nen] = decrease_height(nim,nen);
 end
 

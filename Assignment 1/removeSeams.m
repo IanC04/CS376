@@ -4,8 +4,7 @@ output = im;
 if strcmp(direction, "Vertical")
     for times = 1:numPixels
         energyImg = createEnergyMatrix(output);
-        minimumEnergyImg = createMinimumEnergyMatrix(energyImg);
-        verticalSeam = getSeam(minimumEnergyImg, direction);
+        verticalSeam = getSeam(energyImg, direction);
     for i=1:length(verticalSeam)
     output(i,verticalSeam(i):end-1,:)=output(i,verticalSeam(i)+1:end,:);
     end
@@ -16,8 +15,7 @@ end
 if strcmp(direction, "Horizontal")
     for times = 1:numPixels
         energyImg = createEnergyMatrix(output);
-        minimumEnergyImg = createMinimumEnergyMatrix(energyImg);
-        horizontalSeam = getSeam(minimumEnergyImg, direction);
+        horizontalSeam = getSeam(energyImg, direction);
     for j=1:length(horizontalSeam)
     output(horizontalSeam(j):end-1,j,:)=output(horizontalSeam(j)+1:end,j,:);
     end
