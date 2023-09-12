@@ -81,7 +81,7 @@ with the fewest edges\newline
     which is mostly the same color, therefore a small gradient. Therefore, their cumulative gradients will
     be small. However, in the vertical gradient, the trees in the foreground
     cover the entire bottom half, so the path passed through the patch which
-    are mostly the same shade of the tree leaves. That's why the algorithm prioritizes passing through the blue sky and trees inctead of the UT
+    are mostly the same shade of the tree leaves. That's why the algorithm prioritizes passing through the blue sky and trees instead of the UT
     tower and people, since those regions present many colors and objects. For the horizontal seam, since the blue sky extends throughout the
     entire length of the image, the seam will prioritize its path, since its mostly the same blue color.\newline
     \includegraphics[width=\linewidth]{Part 2 Pictures/question3}\newline
@@ -96,13 +96,20 @@ with the fewest edges\newline
 
     \textbf{Question 5:}\newline
     For the image of the Golden State Warriors winning the championship, I would argue that seam carving produced the worst results, since the
-    faces were distorted, whereas the other two algorithms kept the faces structure the same. Seam carving stetched and ripped the faces, which is
+    faces were distorted, whereas the other two algorithms kept the faces structure the same. Seam carving stretched and ripped the faces, which is
     not ideal for this picture. For the image of the memory painting, I would argue that seam carving produced the best results, since it primarily
     enlarged objects while keeping their aspect ratio the same. Nearest neighbor resulted in a pixelated image, where edges were uneven and
-    fragmented. Bicubic interpolation worked fine, where images kept their visual appearance, however the image was generally blurred and denoised
-    , reducing the painting's authenticity. For the last image of the toucan, I would argue that all three algorithms performed well, since seam
-    carving enlarged the foreground and the toucan, while preserving object structure and edge gradients. Nearest neighbor and bicubic
-    interpolation shrank the image as expected, with nearest neighbor reducing edege quality and gradients a little worse than bicubix
-    interpolation.\newline
+    fragmented. Bicubic interpolation worked fine, where images kept their visual appearance, however the image was generally blurred and
+    unnecessarily removed noise, reducing the painting's authenticity. For the last image of the toucan, I would argue that all three algorithms
+    performed well, since seam carving enlarged the foreground and the toucan, while preserving object structure and edge gradients. Nearest neighbor and bicubic
+    interpolation shrank the image and the toucan's beak as expected, with nearest neighbor reducing edge quality and gradients a little worse than
+    bicubic interpolation.\newline
     \includegraphics[width=\linewidth]{Part 2 Pictures/question5}\newline
+
+    \textbf{Supporting figures:}\newline
+
+    \textit{Removed Vertical Seams:}\newline
+    \includegraphics[width=\linewidth]{Part 2 Pictures/question5-vertical}\newline
+    \textit{Removed Horizontal Seams:}\newline
+    \includegraphics[width=\linewidth]{Part 2 Pictures/question5-horizontal}\newline
 \end{document}

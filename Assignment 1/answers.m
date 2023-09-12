@@ -97,7 +97,7 @@ title("Vertical Seam of Blurred Image");
 %}
 
 %{
-% Question 5
+% Question 5-P1
 figure("Name", "Custom results");
 
 subplot(3, 4, 1);
@@ -174,9 +174,9 @@ title("Bicubic Interpolation Resizing(419×540×3)");
 %}
 
 %{
-% Question 5 All Seams Highlighted
+% Question 5-P2 All Seams Highlighted
 
-figure("Name","All Removed Seams");
+figure("Name","All Vertical Removed Seams");
 
 picture = gsw_image;
 [highlighted, image] = highlightNumberOfSeams(picture, 200, "Vertical");
@@ -185,7 +185,7 @@ imshow(picture);
 title("Original");
 subplot(3,3,2);
 imshow(highlighted);
-title("Highlighted Seams");
+title("Highlighted 200 Seams");
 subplot(3,3,3);
 imshow(image);
 title("Resulting Image");
@@ -197,7 +197,7 @@ imshow(picture);
 title("Original");
 subplot(3,3,5);
 imshow(highlighted);
-title("Highlighted Seams");
+title("Highlighted 100 Seams");
 subplot(3,3,6);
 imshow(image);
 title("Resulting Image");
@@ -209,7 +209,49 @@ imshow(picture);
 title("Original");
 subplot(3,3,8);
 imshow(highlighted);
-title("Highlighted Seams");
+title("Highlighted 100 Seams");
+subplot(3,3,9);
+imshow(image);
+title("Resulting Image");
+%}
+
+%{
+% Question 5-P3 All Seams Highlighted
+
+figure("Name","All Vertical Removed Seams");
+
+picture = gsw_image;
+[highlighted, image] = highlightNumberOfSeams(picture, 200, "Horizontal");
+subplot(3,3,1);
+imshow(picture);
+title("Original");
+subplot(3,3,2);
+imshow(highlighted);
+title("Highlighted 200 Seams");
+subplot(3,3,3);
+imshow(image);
+title("Resulting Image");
+
+picture = memory_image;
+[highlighted, image] = highlightNumberOfSeams(picture, 100, "Horizontal");
+subplot(3,3,4);
+imshow(picture);
+title("Original");
+subplot(3,3,5);
+imshow(highlighted);
+title("Highlighted 100 Seams");
+subplot(3,3,6);
+imshow(image);
+title("Resulting Image");
+
+picture = toucan_image;
+[highlighted, image] = highlightNumberOfSeams(picture, 100, "Horizontal");
+subplot(3,3,7);
+imshow(picture);
+title("Original");
+subplot(3,3,8);
+imshow(highlighted);
+title("Highlighted 100 Seams");
 subplot(3,3,9);
 imshow(image);
 title("Resulting Image");
