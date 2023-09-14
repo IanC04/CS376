@@ -6,11 +6,86 @@
 
 % Packages
 \usepackage{amsmath}
-\usepackage{romannum}
+
+\title{Assignment 2 Writeup}
+\author{Ian Chen}
+\date{\today}
 
 % Document
 \begin{document}
-    Assignment 2 of CS376. Ian Chen, ic8683\newline
+    \maketitle
 
-    \textbf{Part \Romannum{1}.}\newline
+    \section{Short answer problems}
+    
+    \begin{enumerate}
+    \item \textit{Compare the effects of 1) Dilation + Erosion against 2) Erosion + Dilation. Do they have the same 
+    effects? Why?}
+    \text{}
+
+    \item \textit{List two examples of regular texture and two examples of near-regular texture.}
+    \text{}
+
+    \item \textit{What are the cases where optical flow is not well-defined? Please give two concrete examples.}
+    \text{}
+
+    \item \textit{What are the advantages of RANSAC when compared with Hough Transfrom?}
+    \text{}
+
+    \end{enumerate}
+
+    \section{Circle Detection}
+
+    \begin{itemize}
+    \item \textit{Explain your implementation in concise steps (English, not code).}
+    \text{}
+
+    \item \textit{Demonstrate the functions applied to the provided images ‘coins.jpg‘ and ‘planets.jpg‘ andone image of your choosing.
+    Display the images with detected circle(s), labeling the figure with the radius. Note: you only need to select one reasonable radius and
+    display all detected circles (i.e., those with highest votes) under that radius. You are not required to consider circles with a center off
+    theimage.1}
+    \text{}
+
+    \item \textit{For Hough Transform, explain how your implementation post-processes the
+    accumulator array to determine automatically how many circles are present.}
+    \text{}
+
+    \item \textit{For RANSAC, explain how you implement circle fitting.}
+    \text{}
+
+    \item \textit{For one of the images, display and briefly comment on the Hough space accumulator array.}
+    \text{}
+
+    \item \textit{For one of the images, demonstrate and explain the impact of the vote space quantization (binsize). In other words, alter
+    the bin size and compare and contrast with a brief explanation why whathappened makes sense.}
+    \text{}
+
+    \item \textit{For one of the images, plot the progress of the RANSAC as the number of tries increase. Thex axis
+    of the plot should be
+    the number of tries, and the y axis should be the number of inliers thatthe best model produces.}
+    \text{}
+
+    \end{itemize}
+
+    \section{Image segmentation with k-means}
+
+    \begin{enumerate}
+        \item \textit{Given an h x w x 3 matrix ‘Im‘, where h and w are the height and width of the image, apply k-means clustering to
+        associate pixels with clusters. Return ‘labelIm‘, an h×w matrix of integers indicating the cluster membership (e.g., from 1 to k) for each pixel.
+        Please use the following form:}
+        \begin{center}
+            function [labelIm] = clusterPixels(Im, k)
+        \end{center}
+        \text{}
+
+        \item \textit{Detect cluster boundary pixels from ‘labelIm‘.}
+        \begin{center}
+            function [boundaryIm] = boundaryPixels(labelIm)
+        \end{center}
+        \text{}
+
+        \item \textit{Please test both functions on the provided images ‘gumballs.jpg‘, ‘snake.jpg‘, and ‘twins.jpg‘ and one other image of your
+        choosing, and then displays the results.}
+        \text{}
+
+    \end{enumerate}
 \end{document}
