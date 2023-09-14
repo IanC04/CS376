@@ -1,0 +1,235 @@
+%% LyX 2.0.6dev created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[latin9]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\usepackage{babel}
+\usepackage{array}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{amssymb}
+ \usepackage{algorithm}
+ \usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=false,bookmarksopen=false,
+ breaklinks=false,pdfborder={0 0 1},backref=section,colorlinks=false]
+ {hyperref}
+\usepackage{breakurl}
+
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% Because html converters don't know tabularnewline
+\providecommand{\tabularnewline}{\\}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\usepackage{babel}
+\usepackage{babel}
+\usepackage{cite}\usepackage{amsthm}\usepackage{dsfont}\usepackage{array}\usepackage{mathrsfs}\usepackage{comment}\onecolumn
+
+\usepackage{color}\usepackage{babel}
+\newcommand{\mypara}[1]{\paragraph{#1.}}
+
+\newcommand{\R}{\mathbb{R}}
+\let\bs=\boldsymbol
+
+
+\def \transpose {\mathrm{T}}
+\def \score {\mathit{score}}
+\def \E {\mathbb{E}}
+
+% math equations that are widely used
+\def \SigmaA {\Sigma_{2,n}(A)}
+\def \SigmaLG {\Sigma_{1,m}(L^{\set{G}})}
+\def \soIm   {(\bs{s}\otimes I_{m})}
+\def \stoIm   {(\bs{s}^{T}\otimes I_{m})}
+\def \UoIm   {(U \otimes I_{m})}
+\def \UtoIm   {(U^{T} \otimes I_{m})}
+\def \Ainverse {U(\Sigma_{2,n}(A) - \lambda_1(A))^{-1}U^{T}}
+
+\def \Diag {\mathrm{Diag}}
+\def \diag {\mathrm{diag}}
+\def \det {\mathrm{det}}
+\def \trace {\mathrm{Tr}}
+\def \Pr {\mathrm{Pr}}
+\def \objective {\mathit{obj}}
+\def \area {\mathit{area}}
+\def \domain {\set{D}}
+\def \opt {\set{opt}}
+\def \row {\mathit{row}}
+\def \Trace{\mathit{Trace}}
+\def \inconsistent {\textup{Conflict}}
+\def \unary {\mathit{unary}}
+\def \median {\textup{median}}
+\def \exclusive {\textup{exclusive}}
+\def \saliency {\textup{\saliency}}
+\def \flow {\mathit{flow}}
+\def \adj {\mathit{adj}}
+\def \gt {\mathit{gt}}
+\def \noise {\mathit{noise}}
+\def \intra {\textup{intra}}
+\def \inter {\textup{inter}}
+\def \init {\mathit{in}}
+\def \path {\mathit{path}}
+\def \map {\mathit{map}}
+\def \label {\mathit{label}}
+\def \match {\mathit{match}}
+\def \consistency {\mathit{consistency}}
+\def \induced {\mathit{indu}}
+\def \composition {\mathit{compose}}
+\def \minimize {\textup{minimize} }
+\def \maximize {\textup{maximize}}
+\def \subjectto {\textup{subject to}}
+\def \current {\textup{cur}}
+\def \noise {\textup{n}}
+\def \bR {\overline{R}}
+
+
+
+\usepackage{babel}
+\usepackage{arydshln}
+\date{}
+
+\makeatother
+
+\theoremstyle{plain}
+\newtheorem{sol}{\textbf{Solution}}
+\newtheorem*{sol*}{\textbf{Solution}}
+\newtheorem{lem}{\textbf{Lemma}}
+\newtheorem{prop}{\textbf{Proposition}}
+\newtheorem{theorem}{\textbf{Theorem}}
+\newtheorem{corollary}{\textbf{Corollary}}
+\newtheorem{assumption}{\textbf{Assumption}}
+\newtheorem{example}{\textbf{Example}}
+\newtheorem{definition}{\textbf{Definition}}
+\newtheorem{remark}{\textbf{Remark}}
+\newtheorem{fact}{\textbf{Fact}} \theoremstyle{definition}
+\numberwithin{theorem}{section}
+\numberwithin{lem}{section}
+\numberwithin{definition}{section}
+\numberwithin{remark}{section}
+\numberwithin{fact}{section}
+
+\let\vec=\mathbf \let\mat=\mathbf \let\set=\mathcal \global\long\def\para#1{\noindent{\bf #1}}
+ %\newcommand{\para}[1]{\noindent{\bf #1}\hspace{1em}}
+%\newcommand{\set}[1]{{\textstyle{\mathcal #1}}}
+
+
+\global\long\def\Diag{\mathrm{Diag}}
+ \global\long\def\diag{\mathrm{diag}}
+ \global\long\def\objective{\mathit{obj}}
+ \global\long\def\area{\mathit{area}}
+ \global\long\def\domain{\set{D}}
+ \global\long\def\opt{\set{opt}}
+ \global\long\def\minimize{\textup{minimize}}
+ \global\long\def\subjectto{\textup{subject to}}
+
+
+\global\long\def\minimize{\textup{minimize} }
+ \global\long\def\maximize{\textup{maximize}}
+ \global\long\def\subjectto{\textup{subject to}}
+ \global\long\def\R{\mathbb{R}}
+
+\begin{document}
+
+
+\title{\textbf{CS376: Computer Vision: Assignment 2}}
+
+\author{}
+
+\maketitle
+
+\noindent\textbf{Format for writeup:} You may use any tool for preparing the assignment write up that you like, as long as it is organized and clear, and figures are embedded in an easy to find way alongside your descriptive text. 
+
+\noindent\textbf{Submission:} See the end of this document for submission instructions. 
+
+\noindent\textbf{Assignment questions:} Please see Piazza for questions and discussion from the class.
+
+
+\section{Short answer problems [20 pts]}
+
+\noindent\textbf{1.} Compare the effects of 1) Dilation + Erosion against 2) Erosion + Dilation. Do they have the same effects? Why?
+\vspace{0.3in}
+
+\noindent\textbf{2.} List two examples of regular texture and two examples of near-regular texture. 
+\vspace{0.3in}
+
+\noindent\textbf{3.} What are the cases where optical flow is not well-defined? Please given two concrete examples.
+\vspace{0.3in}
+
+\noindent\textbf{4.} What are the advantages of RANSAC when compared with Hough Transform?   
+\vspace{0.3in}
+
+\section{Circle Detection (50 points)}
+
+\noindent Implement two circle detectors (one based on Hough Transformation and another based on RANSAC) that takes an input image and a fixed (known) radius, and returns the centers of any detected circles of about that size.    
+
+\noindent Include two functions with the following form: 
+
+$$
+\textup{[centers] = detectCirclesHT(im, radius)} 
+$$
+
+$$
+\textup{[centers] = detectCirclesRANSAC(im, radius)} 
+$$
+
+where `im` is the input image, `radius` specifies the size of circle we are looking for.  Your detector should not exploit the gradient direction.  The output centers is an N x 2 matrix in which each row lists the x,y position of a detected circle's center.  Write whatever helper functions are useful.
+
+\noindent Then experiment with the basic framework, and in your writeup analyze the following: 
+
+\begin{itemize}
+\item (10 pts) Explain your implementation in concise steps (English, not code). 
+\item (10 pts) Demonstrate the functions applied to the provided images `coins.jpg` and `planets.jpg` and one image of your choosing.  Display the images with detected circle(s), labeling the figure with the radius.  Note: you only need to select one reasonable radius and display all detected circles (i.e., those with highest votes) under that radius. You are not required to consider circles with a center off the image.  
+
+\item (5 pts) For Hough Transform, explain how your implementation post-processes the accumulator array to determine automatically how many circles are present. 
+
+\item (5 pts) For RANSAC, explain how you implement circle fitting. 
+
+\item (5 pts) For one of the images, display and briefly comment on the Hough space accumulator array.  
+
+\item (5 pts) For one of the images, demonstrate and explain the impact of the vote space quantization (bin size).  In other words, alter the bin size and compare and contrast with a brief explanation why what happened makes sense.
+\item (10 pts) For one of the images, plot the progress of the RANSAC as the number of tries increase. The x axis of the plot should be the number of tries, and the y axis should be the number of inliers that the best model produces.
+\end{itemize} 
+ 
+\noindent Useful Matlab functions: `hold on`; `plot`, `fspecial`, `conv2`, `im2double`, `sin`, `cos`, `axis equal`; `edge`, `impixelinfo`; `viscircles`
+
+
+\section{Image segmentation with k-means [30 pts]}
+
+For this problem you will write code to segment an image into regions using k-means clustering to group pixels. 
+ 
+\begin{itemize}
+\item (15 pts) Given an h x w x 3 matrix `Im`, where h and w are the height and width of the image, apply k-means clustering to associate pixels with clusters.  Return `labelIm`, an $h \times w$ matrix of integers indicating the cluster membership (e.g., from $1$ to $k$) for each pixel.  Please use the following form:   
+$$
+\textup{function [labelIm] = clusterPixels(Im, k)} 
+$$
+
+\item (10 pts) Detect cluster boundary pixels from `labelIm`.
+$$
+\textup{function [boundaryIm] = boundaryPixels(labelIm)}
+$$
+\item (5 pts) Please test both functions on the provided images `gumballs.jpg`, `snake.jpg`, and `twins.jpg` and one other image of your choosing, and then displays the results.
+\end{itemize}
+\section*{Submission instructions:}
+
+\noindent Create a single \textbf{zip} file so submit on Canvas that includes
+\begin{itemize}
+\item Your well-commented code, including the files and functions named as specified above.
+\item A \textbf{PDF} writeup of your results with embedded figures where relevant.
+\end{itemize}
+
+\noindent Please do not include any saved matrices or images etc. within your zip file.
+
+
+\renewcommand\refname{}
+\vspace{-0.4in}
+\bibliographystyle{abbrv}
+
+\bibliography{sync}
+
+
+
+\end{document}
