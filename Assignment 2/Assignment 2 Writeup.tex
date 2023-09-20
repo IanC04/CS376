@@ -18,51 +18,64 @@
     \section{Short answer problems}
     
     \begin{enumerate}
-    \item \textit{Compare the effects of 1) Dilation + Erosion against 2) Erosion + Dilation. Do they have the same 
-    effects? Why?}
-    \text{}
+    \item \textit{Compare the effects of 1) Dilation + Erosion against 2) Erosion + Dilation. Do they have the same
+    effects? Why?}\newline
+    They have different effects. Erosion then dilation, also called opening, is used to
+    remove small objects while preserving original shape. This effect removes small regions-like objects like lines
+    or noise, while preserving the larger areas. Dilation then erosion, also called closing, fills holes in regions
+    while preserving region sizes. This effect fills in gaps between objects or within the object itself, while
+    preserving large holes and regions.\newline
 
-    \item \textit{List two examples of regular texture and two examples of near-regular texture.}
-    \text{}
+    \item \textit{List two examples of regular texture and two examples of near-regular texture.}\newline
+    Regular- Brick Wall and Checkboard. Both are exact patterns and identical shapes with no randomness.\newline
+    Irregular- Stone Floor Tiles and Wood Planks. Both are identical from far away, but when closely examined, have
+    small details unique to each piece.\newline
 
-    \item \textit{What are the cases where optical flow is not well-defined? Please give two concrete examples.}
-    \text{}
+    \item \textit{What are the cases where optical flow is not well-defined? Please give two concrete examples.}\newline
+    One case is the aperture problem, where the object's motion is not aligned with the direction calculated by the
+    optical flow gradient, such as a spinning barber pole, with the pixels seem to move up constantly, while in
+    reality it's moving either clockwise or counter-clockwise. The occusion of the object's motion causes a false
+    interpretation of its motion.\newline
+    Another case is the inconsistent brightness, where the object's brightness changes over time, such as a
+    light source being moved around. The optical flow gradient will be inconsistent and not well-defined.\newline
+    Another case is texture-less regions, where the object has no texture, such as a white wall. The optical flow
+    gradient will not sense motion, since all pixels have the same brightness.\newline
+    Another case is motion too fast for the frame rate, where the object moves too fast for the camera to capture
+    smooth differences between each frame. This causes the optical flow gradient to be unable to track motion
+    throughout the frames.\newline
+    .\newline
 
-    \item \textit{What are the advantages of RANSAC when compared with Hough Transfrom?}
-    \text{}
+    \item \textit{What are the advantages of RANSAC when compared with Hough Transform?}\newline
+    RANSAC is more robust to outliers than Hough Transform. RANSAC is able to detect and identity more types of
+    shapes than Hough, so it's more applicable to a wider variety of images. RANSAC is also more efficient than Hough
+    Transform, since only a subset of the total points are needed to be sampled to have a confident result that's
+    representative of the entire image.\newline
 
     \end{enumerate}
 
     \section{Circle Detection}
 
     \begin{itemize}
-    \item \textit{Explain your implementation in concise steps (English, not code).}
-    \text{}
+    \item \textit{Explain your implementation in concise steps (English, not code).}\newline
 
     \item \textit{Demonstrate the functions applied to the provided images ‘coins.jpg‘ and ‘planets.jpg‘ andone image of your choosing.
     Display the images with detected circle(s), labeling the figure with the radius. Note: you only need to select one reasonable radius and
     display all detected circles (i.e., those with highest votes) under that radius. You are not required to consider circles with a center off
-    theimage.1}
-    \text{}
+    theimage.1}\newline
 
     \item \textit{For Hough Transform, explain how your implementation post-processes the
-    accumulator array to determine automatically how many circles are present.}
-    \text{}
+    accumulator array to determine automatically how many circles are present.}\newline
 
-    \item \textit{For RANSAC, explain how you implement circle fitting.}
-    \text{}
+    \item \textit{For RANSAC, explain how you implement circle fitting.}\newline
 
-    \item \textit{For one of the images, display and briefly comment on the Hough space accumulator array.}
-    \text{}
+    \item \textit{For one of the images, display and briefly comment on the Hough space accumulator array.}\newline
 
     \item \textit{For one of the images, demonstrate and explain the impact of the vote space quantization (binsize). In other words, alter
-    the bin size and compare and contrast with a brief explanation why whathappened makes sense.}
-    \text{}
+    the bin size and compare and contrast with a brief explanation why whathappened makes sense.}\newline
 
     \item \textit{For one of the images, plot the progress of the RANSAC as the number of tries increase. Thex axis
     of the plot should be
-    the number of tries, and the y axis should be the number of inliers thatthe best model produces.}
-    \text{}
+    the number of tries, and the y axis should be the number of inliers thatthe best model produces.}\newline
 
     \end{itemize}
 
@@ -71,21 +84,18 @@
     \begin{enumerate}
         \item \textit{Given an h x w x 3 matrix ‘Im‘, where h and w are the height and width of the image, apply k-means clustering to
         associate pixels with clusters. Return ‘labelIm‘, an h×w matrix of integers indicating the cluster membership (e.g., from 1 to k) for each pixel.
-        Please use the following form:}
+        Please use the following form:}\newline
         \begin{center}
             function [labelIm] = clusterPixels(Im, k)
         \end{center}
-        \text{}
 
-        \item \textit{Detect cluster boundary pixels from ‘labelIm‘.}
+        \item \textit{Detect cluster boundary pixels from ‘labelIm‘.}\newline
         \begin{center}
             function [boundaryIm] = boundaryPixels(labelIm)
         \end{center}
-        \text{}
 
         \item \textit{Please test both functions on the provided images ‘gumballs.jpg‘, ‘snake.jpg‘, and ‘twins.jpg‘ and one other image of your
-        choosing, and then displays the results.}
-        \text{}
+        choosing, and then displays the results.}\newline
 
     \end{enumerate}
 \end{document}
