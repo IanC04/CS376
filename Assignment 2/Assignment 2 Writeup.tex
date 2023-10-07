@@ -74,6 +74,10 @@
 
     \begin{itemize}
         \item \textit{Explain your implementation in concise steps (English, not code).}\newline
+        I first found the edges of the image using the Canny edge detector. Then, I created an accumulator
+        array filled with all zeroes. Then, I looped through the edges and incremented the accumular values of the
+        matrix if the center was an edge pixel. Then, I found the maximum value of the accumulator array and
+        determined that it was the center of the circle.\newline
 
         \item \textit{Demonstrate the functions applied to the provided images ‘coins.jpg‘ and ‘planets.jpg‘ and one
         image of your choosing. Display the images with detected circle(s), labeling the figure with the radius.
@@ -83,6 +87,9 @@
 
         \item \textit{For Hough Transform, explain how your implementation post-processes the
         accumulator array to determine automatically how many circles are present.}\newline
+        I found the maximum value of the accumulator array and determined that it was the center of the circle,
+        unless there are more than 180 points having this point as its center, in which case there are multiple
+        circles.\newline
 
         \item \textit{For RANSAC, explain how you implement circle fitting.}\newline
 
