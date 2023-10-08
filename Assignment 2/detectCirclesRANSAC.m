@@ -8,11 +8,11 @@ function [centers] = detectCirclesRANSAC(im, radius)
     N = inf;
     numIterations = 0; % Number of RANSAC iterations
     radiusThreshold = 5; % Threshold to consider a radius as a possible circle
-    inlierThreshold = 5; % Threshold to consider a point as an inlier
+    inlierThreshold = 3; % Threshold to consider a point as an inlier
+    circumference = 2 * pi * radius;
     
     % Initialize variables to store the best circle parameters and inliers
-    bestCenter = [0 0];
-    bestNumInliers = 0;
+    allCenters = [];
     [rowIndices, colIndices] = find(edges == 1);
     % Ensure there are at least 3 non-zero elements in the matrix
     if any([numel(rowIndices) < 3 numel(colIndices) < 3])
@@ -20,12 +20,19 @@ function [centers] = detectCirclesRANSAC(im, radius)
         disp('There are fewer than 3 non-zero elements in the matrix.');
         return;
     end
+
     % Convert to (x, y) points
     edgePoints = horzcat(colIndices, rowIndices);
 
-    while numIterations < N
+    % Tests if there are still circles to find
+    foundCircle = true;
+
+    while foundCircle || numIterations < N
+
+        foundCircle = false;
+
         % Randomly select 3 unique indices
-        randomIndices = randperm(numel(rowIndices), 3);
+        randomIndices = randperm(size(edgePoints, 1), 3);
 
         % Get the corresponding row and column values for the selected
         % indices in the form p_i = (x, y)
@@ -43,9 +50,10 @@ function [centers] = detectCirclesRANSAC(im, radius)
         
         % Initialize inliers for this iteration
         inliers = 0;
+        inliersIndices = [];
         
         % Check each pixel in the image
-        for i = 1:numel(rowIndices)
+        for i = 1:size(edgePoints, 1)
             point = edgePoints(i, :);
             x = point(1);
             y = point(2);
@@ -56,13 +64,17 @@ function [centers] = detectCirclesRANSAC(im, radius)
             % Check if the distance is within the inlier threshold
             if abs(distance - circleRadius) < inlierThreshold
                 inliers = inliers + 1;
+                inliersIndices(end + 1) = i;
             end
         end
-        
-        % Update the best parameters if this iteration has more inliers
-        if inliers > bestNumInliers
-            bestCenter = circleCenter;
-            bestNumInliers = inliers;
+
+        if (inliers >= circumference)
+            foundCircle = true;
+            numIterations = -1;
+            allCenters(end +1, :) = round(circleCenter);
+            for j = 1:inliers
+                edgePoints(inliersIndices(j), :) = [];
+            end
         end
 
         p = 0.99;
@@ -70,11 +82,13 @@ function [centers] = detectCirclesRANSAC(im, radius)
         n = 3;
         N = log(1 - p) / log(1 - w^n);
         numIterations = numIterations + 1;
-    end
 
-    xCoord = round(bestCenter(1, 1));
-    yCoord = round(bestCenter(1, 2));
-    centers = [xCoord yCoord];
+        % If there's not enough sample points
+        if size(edgePoints, 1) < circumference
+            break;
+        end
+    end
+    centers = allCenters;
 end
 
 function [center, radius] = fitCircle(x1, y1, x2, y2, x3, y3)

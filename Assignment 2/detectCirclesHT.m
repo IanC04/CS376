@@ -35,8 +35,9 @@ function [centers] = detectCirclesHT(im, radius)
     accumulator = accumulator .* localCenters;
 
     % Get points above threshold
-    threshold = 120;
-    % threshold = min(max(accumulator,[],"all"), 120);
+    voteThreshold = 0.8 * max(accumulator, [], "all");
+    constThreshold = 120;
+    threshold = max(min(voteThreshold, constThreshold), constThreshold);
     [centerX, centerY] = ind2sub(size(accumulator), find(accumulator >= threshold));
     
     % Swapped to match x and y-axis of viscircles()

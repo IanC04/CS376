@@ -10,7 +10,7 @@ function [allInliersCounts] = RANSACTracker(im, radius)
     N = inf;
     numIterations = 0; % Number of RANSAC iterations
     radiusThreshold = 5; % Threshold to consider a radius as a possible circle
-    inlierThreshold = 5; % Threshold to consider a point as an inlier
+    inlierThreshold = 2; % Threshold to consider a point as an inlier
     
     [rowIndices, colIndices] = find(edges == 1);
     % Ensure there are at least 3 non-zero elements in the matrix
