@@ -1,4 +1,5 @@
 function [highlighted] = highlightCircles(image, centers, radius)
+    centers = fliplr(centers);
     thetas = 1:360;
     highlighted = image;
     [r, c] = size(image, [1 2]);

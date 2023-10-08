@@ -1,18 +1,17 @@
-function [centers] = detectCirclesRANSAC(im, radius)
+function [allInliersCounts] = RANSACTracker(im, radius)
     img = im;
 
     % Get image of edge using edge-detection algorithm
     grayImg = im2gray(img);
     edges = edge(grayImg, "canny");
 
+    inliersPer = [];
+
     N = inf;
     numIterations = 0; % Number of RANSAC iterations
     radiusThreshold = 5; % Threshold to consider a radius as a possible circle
     inlierThreshold = 5; % Threshold to consider a point as an inlier
     
-    % Initialize variables to store the best circle parameters and inliers
-    bestCenter = [0 0];
-    bestNumInliers = 0;
     [rowIndices, colIndices] = find(edges == 1);
     % Ensure there are at least 3 non-zero elements in the matrix
     if any([numel(rowIndices) < 3 numel(colIndices) < 3])
@@ -60,10 +59,7 @@ function [centers] = detectCirclesRANSAC(im, radius)
         end
         
         % Update the best parameters if this iteration has more inliers
-        if inliers > bestNumInliers
-            bestCenter = circleCenter;
-            bestNumInliers = inliers;
-        end
+        inliersPer(end + 1, :) = inliers;
 
         p = 0.99;
         w = inliers / size(edgePoints, 1);
@@ -71,10 +67,7 @@ function [centers] = detectCirclesRANSAC(im, radius)
         N = log(1 - p) / log(1 - w^n);
         numIterations = numIterations + 1;
     end
-
-    xCoord = round(bestCenter(1, 1));
-    yCoord = round(bestCenter(1, 2));
-    centers = [xCoord yCoord];
+    allInliersCounts = inliersPer;
 end
 
 function [center, radius] = fitCircle(x1, y1, x2, y2, x3, y3)

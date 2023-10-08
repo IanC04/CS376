@@ -6,6 +6,9 @@
 
 % Packages
 \usepackage{amsmath}
+\usepackage{graphics}
+\usepackage{graphicx}
+\usepackage{amsfonts}
 
 \title{Assignment 2 Writeup}
 \author{Ian Chen}
@@ -47,9 +50,9 @@
 
         \item \textit{What are the advantages of RANSAC when compared with Hough Transform?}\newline
         RANSAC is more robust to outliers than Hough Transform. RANSAC is able to detect and identity more types of
-        shapes than Hough, so it's more applicable to a wider variety of images. RANSAC is also more efficient than Hough
-        Transform, since only a subset of the total points are needed to be sampled to have a confident result that's
-        representative of the entire image.\newline
+        shapes than Hough, so it's more applicable to a wider variety of images. RANSAC is also more efficient than
+        Hough Transform, since only a subset of the total points are needed to be sampled to have a confident result
+        that's representative of the entire image.\newline
 
     \end{enumerate}
 
@@ -84,24 +87,44 @@
         Note: you only need to select one reasonable radius and display all detected circles
             (i.e., those with highest votes) under that radius.
             You are not required to consider circles with a center off the image.}\newline
+        \includegraphics[width=\textwidth]{Output Pictures/detection_output}\newline
 
         \item \textit{For Hough Transform, explain how your implementation post-processes the
         accumulator array to determine automatically how many circles are present.}\newline
-        I found the maximum value of the accumulator array and determined that it was the center of the circle,
-        unless there are more than 180 points having this point as its center, in which case there are multiple
-        circles.\newline
+        I first got the local maximums of the accumulator array and zeroed out all values not at a local max. This
+        removes circle overlap of thick edges. Next, I used a constant threshold of 120, which means one-third of the
+        circle's edge touches this point. This is to account for noise and a circle not being perfectly round. This
+        removes detected circles overlapping due to only the local maximums being considered. Therefore, all local
+        maxima with 120 edge points going through them are considered circles.\newline
 
         \item \textit{For RANSAC, explain how you implement circle fitting.}\newline
+        I first randomly selected three points from the edge points. Then, I calculated the center and radius of the
+        circle based on those three points. If the radius was within a threshold of the expected radius, then it was
+        a potential fit. Then, I used a threshold to determine how many edge points were within that threshold from
+        the calculated radius, if enough points were within, based on the statistical equation:
+        $\mathbb{N}$ = $\frac{\log(1 - p)}{\log(1 - w^n)}$.\newline
 
         \item \textit{For one of the images, display and briefly comment on the Hough space accumulator array.}\newline
+        \includegraphics[width=\textwidth]{Output Pictures/hough_accumulator}\newline
 
         \item \textit{For one of the images, demonstrate and explain the impact of the vote space quantization (bin
         size). In other words, alter the bin size and compare and contrast with a brief explanation why/what happened
         makes sense.}\newline
+        Smaller bin sizes result in a more finely quantized accumulator array. This can lead to higher sensitivity
+        which may produce more noise and false positives. Circles with radii close to the expected radii will be
+        detected, but it may miss some circles with slightly different radii due to the quantization effect.
+        Larger bin sizes result in a coarser quantization of the accumulator array. This can reduce sensitivity but
+        may miss partially occluded circles. It may be more robust against noise but may miss small or slightly
+        distorted circles.\newline
+        The choice of the bin size is a fine balance between sensitivity and noise tolerance, depending on the specific
+        application and the expected properties of the circles in the image.
+        Smaller bin sizes are suitable for high-precision applications,
+        while larger bin sizes may be preferred in noisy or less structured images.\newline
 
         \item \textit{For one of the images, plot the progress of the RANSAC as the number of tries increase. The x axis
         of the plot should be the number of tries, and the y axis should be the number of inliers that the best model
         produces.}\newline
+        \includegraphics[width=\textwidth]{Output Pictures/inlier_progression}\newline
 
     \end{itemize}
 
@@ -109,8 +132,10 @@
     \section{Image segmentation with k-means}
 
     \begin{enumerate}
-        \item \textit{Given an h x w x 3 matrix ‘Im‘, where h and w are the height and width of the image, apply k-means clustering to
-        associate pixels with clusters. Return ‘labelIm‘, an h×w matrix of integers indicating the cluster membership (e.g., from 1 to k) for each pixel.
+        \item \textit{Given an h x w x 3 matrix ‘Im‘, where h and w are the height and width of the image, apply
+        k-means clustering to
+        associate pixels with clusters. Return ‘labelIm‘, an h×w matrix of integers indicating the cluster
+        membership (e.g., from 1 to k) for each pixel.
         Please use the following form:}\newline
         \begin{center}
             function [labelIm] = clusterPixels(Im, k)
@@ -121,8 +146,8 @@
             function [boundaryIm] = boundaryPixels(labelIm)
         \end{center}
 
-        \item \textit{Please test both functions on the provided images ‘gumballs.jpg‘, ‘snake.jpg‘, and ‘twins.jpg‘ and one other image of your
-        choosing, and then displays the results.}\newline
+        \item \textit{Please test both functions on the provided images ‘gumballs.jpg‘, ‘snake.jpg‘, and ‘twins.jpg‘
+        and one other image of your choosing, and then displays the results.}\newline
 
     \end{enumerate}
 \end{document}

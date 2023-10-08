@@ -1,28 +1,24 @@
 function [centers] = detectCirclesHT(im, radius)
     img = im;
-    thetas = 1:360;
-    [r, c] = size(img, [1 2]);
+    thetas = 0:359;
+    [height, width] = size(img, [1 2]);
 
     % Get image of edge using edge-detection algorithm
     grayImg = im2gray(img);
     edges = edge(grayImg, "canny");
-    % figure;
-    % imshow(edges);
 
     % Create accumulator array and use polar coordinates
-    accumulator = zeros(r, c);
+    accumulator = zeros(height, width);
 
     % Calculate Hough radii
-    for i = 1:r
-        for j = 1:c
+    for i = 1:height
+        for j = 1:width
             if edges(i, j) == 1
-                x = i - 1;
-                y = j - 1;
                 for theta = thetas
-                    x_circ = round(cosd(theta) * radius + x);
-                    y_circ = round(sind(theta) * radius + y);
-                    if not(any([x_circ < 1, y_circ < 1, x_circ > r, y_circ > c]))
-                        accumulator(x_circ, y_circ) = accumulator(x_circ, y_circ) + 1;
+                    rc = round(i + sind(theta) * radius);
+                    cc = round(j + cosd(theta) * radius);
+                    if not(any([rc < 1, cc < 1, rc > height, cc > width]))
+                        accumulator(rc, cc) = accumulator(rc, cc) + 1;
                     end
                 end
             end
@@ -34,8 +30,15 @@ function [centers] = detectCirclesHT(im, radius)
     % acc_normal = mat2gray(accumulator);
     % imshow(acc_normal);
 
+    % Get local maxima
+    localCenters = imregionalmax(accumulator);
+    accumulator = accumulator .* localCenters;
+
     % Get points above threshold
-    threshold = min(max(accumulator,[],"all"), 180);
+    threshold = 120;
+    % threshold = min(max(accumulator,[],"all"), 120);
     [centerX, centerY] = ind2sub(size(accumulator), find(accumulator >= threshold));
-    centers = [centerX, centerY];
+    
+    % Swapped to match x and y-axis of viscircles()
+    centers = [centerY, centerX];
 end
