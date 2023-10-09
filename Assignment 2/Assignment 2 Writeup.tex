@@ -87,8 +87,10 @@
         Note: you only need to select one reasonable radius and display all detected circles
             (i.e., those with highest votes) under that radius.
             You are not required to consider circles with a center off the image.}\newline
+        These outputs are interesting, and the more noisy or edges there are, the more circles would be detected
+        overall.\newline I added the Golden State Warriors image since it had a lot of edges and noise, so it would
+        be hard for the algorithms to correctly fit circles onto the image.\newline
         \includegraphics[width=\textwidth]{Output Pictures/detection_output}\newline
-        % TODO: Add personal image
 
         \item \textit{For Hough Transform, explain how your implementation post-processes the
         accumulator array to determine automatically how many circles are present.}\newline
@@ -138,7 +140,8 @@
         \item \textit{For one of the images, plot the progress of the RANSAC as the number of tries increase. The x axis
         of the plot should be the number of tries, and the y axis should be the number of inliers that the best model
         produces.}\newline
-        % TODO: Fix image
+        I plotted both the best fitting circle with respect to number of inliers and the total inliers of circles
+        detected. The detected circles were also shown in the figure.\newline
         \includegraphics[width=\textwidth]{Output Pictures/inlier_progression}\newline
     \end{itemize}
 
@@ -165,7 +168,6 @@
         \includegraphics[width=\textwidth]{Output Pictures/gumball_kmeans}\newline
         \includegraphics[width=\textwidth]{Output Pictures/snake_kmeans}\newline
         \includegraphics[width=\textwidth]{Output Pictures/twins_kmeans}\newline
-        % TODO: Add personal image
-
+        \includegraphics[width=\textwidth]{Output Pictures/toucan_kmeans}\newline
     \end{enumerate}
 \end{document}

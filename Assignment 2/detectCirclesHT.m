@@ -42,6 +42,7 @@ accumulator = accumulator .* localCenters;
 voteThreshold = 0.8 * max(accumulator, [], "all");
 constThreshold = 120;
 threshold = max(voteThreshold, constThreshold);
+fprintf("Threshold is: " + threshold + "\n");
 [centerX, centerY] = ind2sub(size(accumulator), find(accumulator >= threshold));
 centerY = centerY * double(bin_size);
 centerX = centerX * double(bin_size);

@@ -1,4 +1,4 @@
-function [allInliers, bestInliers] = RANSACTracker(im, radius)
+function [allInliers, bestInliers, allCenters] = RANSACTracker(im, radius)
 img = im;
 
 % Get image of edge using edge-detection algorithm
@@ -12,6 +12,7 @@ inlierThreshold = 2; % Threshold to consider a point as an inlier
 circumference = 2 * pi * radius;
 allInliers = zeros(1);
 bestInliers = zeros(1);
+allCenters = [];
 
 
 % Initialize variables to store the best circle parameters and inliers
@@ -74,8 +75,12 @@ while foundCircle || numIterations < N
     if (inliers >= circumference)
         fprintf("Found circle at: " + circleCenter(1) + ", " + circleCenter(2) + "\n");
         foundCircle = true;
+        allCenters(end + 1, :) = round(circleCenter);
         numIterations = -1;
-        for j = 1:inliers
+        for j = inliers:-1:1
+            if inliersIndices(j) > size(edgePoints, 1) || inliersIndices(j) == 0
+                fprintf("Error: " + size(edgePoints, 1) + " less than " + inliersIndices(j));
+            end
             edgePoints(inliersIndices(j), :) = [];
         end
         allInliers(end + 1) = allInliers(end) + inliers;

@@ -74,7 +74,7 @@ function [centers] = detectCirclesRANSAC(im, radius)
             foundCircle = true;
             numIterations = -1;
             allCenters(end +1, :) = round(circleCenter);
-            for j = 1:inliers
+            for j = inliers:-1:1
                 edgePoints(inliersIndices(j), :) = [];
             end
         end
