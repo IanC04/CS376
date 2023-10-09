@@ -1,17 +1,19 @@
-function [allInliersCounts] = RANSACTracker(im, radius)
+function [allInliers] = RANSACTracker(im, radius)
     img = im;
 
     % Get image of edge using edge-detection algorithm
     grayImg = im2gray(img);
     edges = edge(grayImg, "canny");
 
-    inliersPer = [];
-
     N = inf;
     numIterations = 0; % Number of RANSAC iterations
-    radiusThreshold = 5; % Threshold to consider a radius as a possible circle
+    radiusThreshold = 10; % Threshold to consider a radius as a possible circle
     inlierThreshold = 2; % Threshold to consider a point as an inlier
+    circumference = 2 * pi * radius;
+    allInliers = zeros(1);
+
     
+    % Initialize variables to store the best circle parameters and inliers
     [rowIndices, colIndices] = find(edges == 1);
     % Ensure there are at least 3 non-zero elements in the matrix
     if any([numel(rowIndices) < 3 numel(colIndices) < 3])
@@ -19,12 +21,19 @@ function [allInliersCounts] = RANSACTracker(im, radius)
         disp('There are fewer than 3 non-zero elements in the matrix.');
         return;
     end
+
     % Convert to (x, y) points
     edgePoints = horzcat(colIndices, rowIndices);
 
-    while numIterations < N
+    % Tests if there are still circles to find
+    foundCircle = true;
+
+    while foundCircle || numIterations < N
+
+        foundCircle = false;
+
         % Randomly select 3 unique indices
-        randomIndices = randperm(numel(rowIndices), 3);
+        randomIndices = randperm(size(edgePoints, 1), 3);
 
         % Get the corresponding row and column values for the selected
         % indices in the form p_i = (x, y)
@@ -37,14 +46,16 @@ function [allInliersCounts] = RANSACTracker(im, radius)
         
         % Skip if the radius is significantly different from the expected radius
         if abs(circleRadius - radius) > radiusThreshold
+            numIterations = numIterations + 1;
             continue;
         end
         
         % Initialize inliers for this iteration
         inliers = 0;
+        inliersIndices = [];
         
         % Check each pixel in the image
-        for i = 1:numel(rowIndices)
+        for i = 1:size(edgePoints, 1)
             point = edgePoints(i, :);
             x = point(1);
             y = point(2);
@@ -55,19 +66,31 @@ function [allInliersCounts] = RANSACTracker(im, radius)
             % Check if the distance is within the inlier threshold
             if abs(distance - circleRadius) < inlierThreshold
                 inliers = inliers + 1;
+                inliersIndices(end + 1) = i;
             end
         end
-        
-        % Update the best parameters if this iteration has more inliers
-        inliersPer(end + 1, :) = inliers;
+
+        if (inliers >= circumference)
+            fprintf("Found circle at: " + circleCenter(1) + ", " + circleCenter(2) + "\n");
+            foundCircle = true;
+            numIterations = -1;
+            for j = 1:inliers
+                edgePoints(inliersIndices(j), :) = [];
+            end
+            allInliers(end + 1) = allInliers(end) + inliers;
+        end
 
         p = 0.99;
         w = inliers / size(edgePoints, 1);
         n = 3;
         N = log(1 - p) / log(1 - w^n);
         numIterations = numIterations + 1;
+
+        % If there's not enough sample points
+        if size(edgePoints, 1) < circumference
+            break;
+        end
     end
-    allInliersCounts = inliersPer;
 end
 
 function [center, radius] = fitCircle(x1, y1, x2, y2, x3, y3)

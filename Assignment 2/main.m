@@ -9,75 +9,82 @@ twinsImg = imread("Assignment2_pics\twins.jpg");
 % showAccumulator(coinsImg, radius);
 
 % % Hough Transform
+% 
+% tiledlayout(1, 2, "Padding","tight", "TileSpacing","compact");
+% 
 % radius = 100;
-% subplot(2, 2, 1);
+% binsize = 3;
+% nexttile;
 % centers = detectCirclesHT(coinsImg, radius);
 % imshow(coinsImg);
 % hold on;
 % viscircles(centers, radius);
-% title("Hough-Circle in Coins of radius " + radius);
+% title("Hough-Circle in Coins of radius " + radius + " with bin size: " + binsize);
 % 
-% radius = 110;
-% subplot(2, 2, 2);
+% radius = 105;
+% nexttile;
 % centers = detectCirclesHT(planetsImg, radius);
 % imshow(planetsImg);
 % hold on;
 % viscircles(centers, radius);
-% title("Hough-Circle in Planets of radius " + radius);
+% title("Hough-Circle in Planets of radius " + radius + " with bin size: " + binsize);
 
-% % RANSAC
-% radius = 100;
-% subplot(2, 2, 3);
-% centers = detectCirclesRANSAC(coinsImg, radius);
-% imshow(coinsImg);
-% hold on;
-% viscircles(centers, radius);
-% title("RANSAC-Circle in Coins of radius " + radius);
-% 
-% radius = 110;
-% subplot(2, 2, 4);
-% centers = detectCirclesRANSAC(planetsImg, radius);
-% imshow(planetsImg);
-% hold on;
-% viscircles(centers, radius);
-% title("RANSAC-Circle in Planets of radius " + radius);
+% RANSAC
 
-% radius = 100;
+tiledlayout(1, 2, "Padding","tight", "TileSpacing","compact");
+
+radius = 100;
+nexttile;
+centers = detectCirclesRANSAC(coinsImg, radius);
+imshow(coinsImg);
+hold on;
+viscircles(centers, radius);
+title("RANSAC-Circle in Coins of radius " + radius);
+
+radius = 110;
+nexttile;
+centers = detectCirclesRANSAC(planetsImg, radius);
+imshow(planetsImg);
+hold on;
+viscircles(centers, radius);
+title("RANSAC-Circle in Planets of radius " + radius);
+
+radius = 100;
 % inliers = RANSACTracker(coinsImg, radius);
 % plot(inliers);
 % title("Progression of RANSAC algorithm");
-% xlabel("Iterations"); 
+% xlabel("Iterations");
 % ylabel("Number of Inliers");
 
-% K-Means Clustering
-
-k = 10;
-% subplot(1, 2, 1);
-% labelImg = clusterPixels(gumballsImg, k);
-% imshow(mat2gray(labelImg));
-% title("Image using only " + k + " clusters");
+% % K-Means Clustering
 % 
-% subplot(1, 2, 2);
-% boundaryImg = boundaryPixels(labelImg);
-% imshow(mat2gray(boundaryImg));
-% title("Edges of the " + k + " clusters");
-
-% subplot(1, 2, 1);
-% labelImg = clusterPixels(snakeImg, k);
-% imshow(mat2gray(labelImg));
-% title("Image using only " + k + " clusters");
+% % Max clusters
+% k = 10;
+% % Images are gumballsImg, snakeImg twinsImg
+% % image = gumballsImg;
+% % image = snakeImg;
+% image = twinsImg;
 % 
-% subplot(1, 2, 2);
-% boundaryImg = boundaryPixels(labelImg);
-% imshow(mat2gray(boundaryImg));
-% title("Edges of the " + k + " clusters");
-
-subplot(1, 2, 1);
-labelImg = clusterPixels(twinsImg, k);
-imshow(mat2gray(labelImg));
-title("Image using only " + k + " clusters");
-
-subplot(1, 2, 2);
-boundaryImg = boundaryPixels(labelImg);
-imshow(mat2gray(boundaryImg));
-title("Edges of the " + k + " clusters");
+% tiledlayout(4, 2, "Padding","tight", "TileSpacing","compact");
+% 
+% nexttile;
+% imshow(image, "InitialMagnification", "fit", "Border","tight");
+% title("Original image");
+% 
+% nexttile;
+% grayImg = im2gray(image);
+% edges = edge(grayImg, "canny");
+% imshow(edges, "InitialMagnification", "fit", "Border","tight");
+% title("Edges of original image");
+% 
+% for i = 2:4:k
+%     nexttile;
+%     labelImg = clusterPixels(image, i);
+%     imshow(mat2gray(labelImg), "InitialMagnification", "fit", "Border","tight");
+%     title("Image using " + i + " clusters");
+% 
+%     nexttile;
+%     boundaryImg = boundaryPixels(labelImg);
+%     imshow(mat2gray(boundaryImg), "InitialMagnification", "fit", "Border","tight");
+%     title("Edges of the " + i + " clusters");
+% end

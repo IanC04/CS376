@@ -7,8 +7,8 @@ function [centers] = detectCirclesRANSAC(im, radius)
 
     N = inf;
     numIterations = 0; % Number of RANSAC iterations
-    radiusThreshold = 5; % Threshold to consider a radius as a possible circle
-    inlierThreshold = 3; % Threshold to consider a point as an inlier
+    radiusThreshold = 10; % Threshold to consider a radius as a possible circle
+    inlierThreshold = 2; % Threshold to consider a point as an inlier
     circumference = 2 * pi * radius;
     
     % Initialize variables to store the best circle parameters and inliers
@@ -45,6 +45,7 @@ function [centers] = detectCirclesRANSAC(im, radius)
         
         % Skip if the radius is significantly different from the expected radius
         if abs(circleRadius - radius) > radiusThreshold
+            numIterations = numIterations + 1;
             continue;
         end
         
@@ -69,6 +70,7 @@ function [centers] = detectCirclesRANSAC(im, radius)
         end
 
         if (inliers >= circumference)
+            fprintf("Found circle at: " + circleCenter(1) + ", " + circleCenter(2) + "\n");
             foundCircle = true;
             numIterations = -1;
             allCenters(end +1, :) = round(circleCenter);

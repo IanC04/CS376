@@ -36,7 +36,7 @@ function [labelIm] = clusterPixels(Im, k)
         curMeans = getMeans(img, clusterIndices, k);
 
         totalIterations = totalIterations + 1;
-        fprintf("Current iteration: " + totalIterations + "\n");
+        fprintf("Current iteration using " + k + " clusters: " + totalIterations + "\n");
 
         equal = isequal(means, curMeans);
     end

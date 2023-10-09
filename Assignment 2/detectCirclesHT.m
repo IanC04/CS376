@@ -2,13 +2,16 @@ function [centers] = detectCirclesHT(im, radius)
     img = im;
     thetas = 0:359;
     [height, width] = size(img, [1 2]);
+    bin_size = uint32(3);
+    bin_amount_height = idivide(height, bin_size, "ceil");
+    bin_amount_width = idivide(width, bin_size, "ceil");
 
     % Get image of edge using edge-detection algorithm
     grayImg = im2gray(img);
     edges = edge(grayImg, "canny");
 
     % Create accumulator array and use polar coordinates
-    accumulator = zeros(height, width);
+    accumulator = zeros(bin_amount_height, bin_amount_width);
 
     % Calculate Hough radii
     for i = 1:height
@@ -18,7 +21,8 @@ function [centers] = detectCirclesHT(im, radius)
                     rc = round(i + sind(theta) * radius);
                     cc = round(j + cosd(theta) * radius);
                     if not(any([rc < 1, cc < 1, rc > height, cc > width]))
-                        accumulator(rc, cc) = accumulator(rc, cc) + 1;
+                        accumulator(idivide(rc, bin_size, "ceil"), idivide(cc, bin_size, "ceil")) = ...
+                        accumulator(idivide(rc, bin_size, "ceil"), idivide(cc, bin_size, "ceil")) + 1;
                     end
                 end
             end
@@ -37,8 +41,10 @@ function [centers] = detectCirclesHT(im, radius)
     % Get points above threshold
     voteThreshold = 0.8 * max(accumulator, [], "all");
     constThreshold = 120;
-    threshold = max(min(voteThreshold, constThreshold), constThreshold);
+    threshold = max(voteThreshold, constThreshold);
     [centerX, centerY] = ind2sub(size(accumulator), find(accumulator >= threshold));
+    centerY = centerY * double(bin_size);
+    centerX = centerX * double(bin_size);
     
     % Swapped to match x and y-axis of viscircles()
     centers = [centerY, centerX];

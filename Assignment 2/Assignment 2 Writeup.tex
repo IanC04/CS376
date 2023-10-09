@@ -52,7 +52,7 @@
         RANSAC is more robust to outliers than Hough Transform. RANSAC is able to detect and identity more types of
         shapes than Hough, so it's more applicable to a wider variety of images. RANSAC is also more efficient than
         Hough Transform, since only a subset of the total points are needed to be sampled to have a confident result
-        that's representative of the entire image.\newline
+        of a detected object.\newline
 
     \end{enumerate}
 
@@ -107,7 +107,11 @@
         number of edge points.\newline
 
         \item \textit{For one of the images, display and briefly comment on the Hough space accumulator array.}\newline
-        The accumulator array is a 2D array with the x-axis being the x-coordinate of the center of the circle and the
+        The accumulator array is a 2D array built by looping through the edge points and incrementing the matrix at
+        the circle's circumference assuming the center was that edge. The resulting accumulator array is a 2D matrix
+        with maximum values at circle centers, since all those edges all 1 to the center. Then, I reduce the matrix
+        to include only local maximums, to reduce noise and overlapping circles. The resulting matrix values are
+        either circle centers or random points, which are ignored when post-processing the matrix for circles.\newline
         \includegraphics[width=\textwidth]{Output Pictures/hough_accumulator}\newline
 
         \item \textit{For one of the images, demonstrate and explain the impact of the vote space quantization (bin
@@ -123,7 +127,8 @@
         application and the expected properties of the circles in the image.
         Smaller bin sizes are suitable for high-precision applications,
         while larger bin sizes may be preferred in noisy or less structured images.\newline
-        % TODO: Add pictures using different bin sizes
+        \includegraphics[width=\textwidth]{Output Pictures/binsize_1}\newline
+        \includegraphics[width=\textwidth]{Output Pictures/binsize_3}\newline
 
         \item \textit{For one of the images, plot the progress of the RANSAC as the number of tries increase. The x axis
         of the plot should be the number of tries, and the y axis should be the number of inliers that the best model
@@ -151,6 +156,7 @@
 
         \item \textit{Please test both functions on the provided images ‘gumballs.jpg‘, ‘snake.jpg‘, and ‘twins.jpg‘
         and one other image of your choosing, and then displays the results.}\newline
+        I used the RGB values of pixels to determine which cluster it belonged to.\newline
         \includegraphics[width=\textwidth]{Output Pictures/gumball_kmeans}\newline
         \includegraphics[width=\textwidth]{Output Pictures/snake_kmeans}\newline
         \includegraphics[width=\textwidth]{Output Pictures/twins_kmeans}\newline
