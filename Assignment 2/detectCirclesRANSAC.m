@@ -16,6 +16,7 @@ circumference = 2 * pi * radius;
 % Initialize variables to store the best circle parameters and inliers
 allCenters = Stack();
 [rowIndices, colIndices] = find(edges == 1);
+
 % Ensure there are at least 3 non-zero elements in the matrix
 if any([numel(rowIndices) < 3 numel(colIndices) < 3])
     % Handle the case where there are fewer than 3 non-zero elements
