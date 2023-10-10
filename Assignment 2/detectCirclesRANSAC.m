@@ -1,6 +1,4 @@
 function [centers] = detectCirclesRANSAC(im, radius)
-import java.util.*;
-
 img = im;
 
 % Get image of edge using edge-detection algorithm
@@ -14,7 +12,7 @@ inlierThreshold = 2; % Threshold to consider a point as an inlier
 circumference = 2 * pi * radius;
 
 % Initialize variables to store the best circle parameters and inliers
-allCenters = Stack();
+allCenters = [];
 [rowIndices, colIndices] = find(edges == 1);
 
 % Ensure there are at least 3 non-zero elements in the matrix
@@ -49,8 +47,7 @@ while numIterations < N
 
     % Initialize inliers for this iteration
     inliers = 0;
-    inliersIndices = Stack();
-    outliersIndices = Stack();
+    inliersIndices = [];
 
     % Check each pixel in the image
     for i = 1:size(edgePoints, 1)
@@ -64,17 +61,17 @@ while numIterations < N
         % Check if the distance is within the inlier threshold
         if abs(distance - circleRadius) < inlierThreshold
             inliers = inliers + 1;
-            inliersIndices.push(i);
-        else
-            outliersIndices.push(i);
+            inliersIndices(end + 1) = i;
         end
     end
 
     if (inliers >= circumference)
         fprintf("Found circle at: " + circleCenter(1) + ", " + circleCenter(2) + "\n");
         numIterations = -1;
-        allCenters.push(round(circleCenter));
-        edgePoints = outliersIndices;
+        allCenters(end +1, :) = round(circleCenter);
+        for j = inliers:-1:1
+            edgePoints(inliersIndices(j), :) = [];
+        end
     end
 
     p = 0.99;
