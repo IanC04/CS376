@@ -7,7 +7,7 @@ edges = edge(grayImg, "canny");
 
 N = inf;
 numIterations = 0; % Number of RANSAC iterations
-radiusThreshold = 10; % Threshold to consider a radius as a possible circle
+radiusThreshold = 5; % Threshold to consider a radius as a possible circle
 inlierThreshold = 2; % Threshold to consider a point as an inlier
 circumference = 2 * pi * radius;
 allInliers = zeros(1);
