@@ -31,8 +31,9 @@
         preserving large holes and regions.\newline
 
         \item \textit{List two examples of regular texture and two examples of near-regular texture.}\newline
-        Regular- Brick Wall and Checkerboard. Both are exact patterns and identical shapes with no randomness.\newline
-        Irregular- Stone Floor Tiles and Wood Planks. Both are identical from far away, but when closely examined, have
+        Regular: Brick Wall and Checkerboard. Both are exact patterns and identical shapes with no randomness.\newline
+        Near-Regular: Stone Floor Tiles and Wood Planks. Both are identical from far away, but when closely examined,
+        have
         small details unique to each piece.\newline
 
         \item \textit{What are the cases where optical flow is not well-defined? Please give two concrete examples.}\newline
@@ -40,9 +41,7 @@
         optical flow gradient, such as a spinning barber pole, with the pixels seem to move up constantly, while in
         reality it's moving either clockwise or counter-clockwise. The occlusion of the object's motion causes a false
         interpretation of its motion.\newline
-        Another case is the inconsistent brightness, where the object's brightness changes over time, such as a
-        light source being moved around. The optical flow gradient will be inconsistent and not well-defined.\newline
-        Another case is texture-less regions, where the object has no texture, such as a white wall. The optical flow
+        A second case is texture-less regions, where the object has no texture, such as a white wall. The optical flow
         gradient will not sense motion, since all pixels have the same brightness.\newline
         Another case is motion too fast for the frame rate, where the object moves too fast for the camera to capture
         smooth differences between each frame. This causes the optical flow gradient to be unable to track motion
@@ -52,7 +51,9 @@
         RANSAC is more robust to outliers than Hough Transform. RANSAC is able to detect and identity more types of
         shapes than Hough, so it's more applicable to a wider variety of images. RANSAC is also more efficient than
         Hough Transform, since only a subset of the total points are needed to be sampled to have a confident result
-        of a detected object.\newline
+        of a detected object, or in the case of a large parameter space. However, Hough is deterministic while RANSAC
+        is probabilistic, so Hough is more
+        consistent.\newline
 
     \end{enumerate}
 
@@ -79,8 +80,10 @@
         \item \textit{Explain your implementation in concise steps (English, not code).}\newline
         I first found the edges of the image using the Canny edge detector. Then, I created an accumulator
         array filled with all zeroes. Then, I looped through the edges and incremented the accumular values of the
-        matrix if the center was an edge pixel. Then, I found the maximum value of the accumulator array and
-        determined that it was the center of the circle.\newline
+        matrix if it was radius units away from an edge. In other words, the center was an edge pixel. I then post
+        -processed the matrix by keeping only local maximums, in order to not have too many overlapping circles. Then, I
+        found the maximum value of the accumulator array with both a variable and constant threshold and determined that
+        values above were centers of circles.\newline
 
         \item \textit{Demonstrate the functions applied to the provided images ‘coins.jpg‘ and ‘planets.jpg‘ and one
         image of your choosing. Display the images with detected circle(s), labeling the figure with the radius.
@@ -102,19 +105,21 @@
         maxima with at least 120 edge points going through them are considered circles.\newline
 
         \item \textit{For RANSAC, explain how you implement circle fitting.}\newline
-        I first randomly selected three points from the edge points. Then, I calculated the center and radius of the
-        circle based on those three points. If the radius was within a threshold of the expected radius, then it was
+        I first randomly selected three unique points from the edge points. Then, I calculated the center and radius of
+        the circle based on those three points. If the radius was within a threshold of the expected radius, then it was
         a potential fit. Then, I used a threshold to determine how many edge points were within that threshold from
-        the calculated radius, if enough points were within, based on the statistical equation:
-        $\mathbb{N}$ = $\frac{\log(1 - p)}{\log(1 - w^n)}$. There had to be enough inliers compared to the total
-        number of edge points.\newline
+        the calculated radius. Those points were inliers, and if enough points were within compared to the
+        circumference, then it was a circle. This was repeated based on the statistical equation:
+        $\mathbb{N}$ = $\frac{\log(1 - p)}{\log(1 - w^n)}$, where points were slowly removed from detected circles
+        and reset on very successful circle detection.\newline
 
         \item \textit{For one of the images, display and briefly comment on the Hough space accumulator array.}\newline
         The accumulator array is a 2D array built by looping through the edge points and incrementing the matrix at
         the circle's circumference assuming the center was that edge. The resulting accumulator array is a 2D matrix
-        with maximum values at circle centers, since all those edges all 1 to the center. Then, I reduce the matrix
+        with maximum values at circle centers, since all those edges add 1 to the center. Then, I reduce the matrix
         to include only local maximums, to reduce noise and overlapping circles. The resulting matrix values are
-        either circle centers or random points, which are ignored when post-processing the matrix for circles.\newline
+        either circle centers or random points with many edge points overlapping it, which are ignored when post
+        -processing the matrix for circles.\newline
         \includegraphics[width=\textwidth]{Output Pictures/hough_accumulator}\newline
 
         \item \textit{For one of the images, demonstrate and explain the impact of the vote space quantization (bin
@@ -134,8 +139,8 @@
         \includegraphics[width=\textwidth]{Output Pictures/binsize_2}\newline
         \includegraphics[width=\textwidth]{Output Pictures/binsize_3}\newline
         The results are interesting, since noise is suppressed by a larger bin size, but in the planets picture, the
-        \"shadow of Jupiter\" is determined a circle, showing the the half circle generated by the shadow was detected
-        .\newline
+        ``shadow of Jupiter'' is determined a circle, showing that the half circle generated by the shadow was
+        detected.\newline
 
         \item \textit{For one of the images, plot the progress of the RANSAC as the number of tries increase. The x axis
         of the plot should be the number of tries, and the y axis should be the number of inliers that the best model
@@ -148,7 +153,7 @@
 
     \section{Image segmentation with k-means}
 
-    \begin{enumerate}
+    \begin{itemize}
         \item \textit{Given an h x w x 3 matrix ‘Im‘, where h and w are the height and width of the image, apply
         k-means clustering to associate pixels with clusters. Return ‘labelIm‘, an h×w matrix of integers indicating
         the cluster membership (e.g., from 1 to k) for each pixel.
@@ -165,9 +170,11 @@
         \item \textit{Please test both functions on the provided images ‘gumballs.jpg‘, ‘snake.jpg‘, and ‘twins.jpg‘
         and one other image of your choosing, and then displays the results.}\newline
         I used the RGB values of pixels to determine which cluster it belonged to.\newline
+        I used the equation $\mathbb{D}$ = $\sqrt {(r_2 - r_1)^2 + (g_2 - g_1)^2 + (b_2 - b_1)^2}$ to determine which
+        cluster had the least distance every iteration until convergence.\newline
         \includegraphics[width=\textwidth]{Output Pictures/gumball_kmeans}\newline
         \includegraphics[width=\textwidth]{Output Pictures/snake_kmeans}\newline
         \includegraphics[width=\textwidth]{Output Pictures/twins_kmeans}\newline
         \includegraphics[width=\textwidth]{Output Pictures/toucan_kmeans}\newline
-    \end{enumerate}
+    \end{itemize}
 \end{document}

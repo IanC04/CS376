@@ -95,9 +95,9 @@ gswImg = imread("Assignment2_pics\gsw.jpg");
 % title("Hough-Circle in Planets of radius " + radius + " with bin size: " + binsize);
 
 % RANSAC
-%
+
 % tiledlayout(1, 2, "Padding","tight", "TileSpacing","compact");
-%
+% 
 % radius = 100;
 % nexttile;
 % centers = detectCirclesRANSAC(coinsImg, radius);
@@ -105,7 +105,7 @@ gswImg = imread("Assignment2_pics\gsw.jpg");
 % hold on;
 % viscircles(centers, radius);
 % title("RANSAC-Circle in Coins of radius " + radius);
-%
+% 
 % radius = 110;
 % nexttile;
 % centers = detectCirclesRANSAC(planetsImg, radius);
@@ -113,32 +113,31 @@ gswImg = imread("Assignment2_pics\gsw.jpg");
 % hold on;
 % viscircles(centers, radius);
 % title("RANSAC-Circle in Planets of radius " + radius);
-%
 
 % RANSAC Progression
 
-tiledlayout(1, 3, "Padding","tight", "TileSpacing","compact");
-
-nexttile;
-radius = 40;
-[allInliers, bestInliers, centers] = RANSACTracker(coinsImg, radius);
-plot(bestInliers);
-title("Progression of RANSAC algorithm");
-xlabel("Iterations");
-ylabel("Best Number of Inliers for a Circle of radius: " + radius);
-
-nexttile;
-plot(allInliers);
-title("Progression of RANSAC algorithm");
-xlabel("Iterations");
-ylabel("Total Number of Inliers for a Circle of radius: " + radius);
-
-nexttile;
-plot(allInliers);
-title("Detected Circles of radius: " + radius);
-imshow(coinsImg);
-hold on;
-viscircles(centers, radius);
+% tiledlayout(1, 3, "Padding","tight", "TileSpacing","compact");
+% 
+% nexttile;
+% radius = 40;
+% [allInliers, bestInliers, centers] = RANSACTracker(coinsImg, radius);
+% plot(bestInliers);
+% title("Progression of RANSAC algorithm");
+% xlabel("Iterations");
+% ylabel("Best Number of Inliers for a Circle of radius: " + radius);
+% 
+% nexttile;
+% plot(allInliers);
+% title("Progression of RANSAC algorithm");
+% xlabel("Iterations");
+% ylabel("Total Number of Inliers for a Circle of radius: " + radius);
+% 
+% nexttile;
+% plot(allInliers);
+% title("Detected Circles of radius: " + radius);
+% imshow(coinsImg);
+% hold on;
+% viscircles(centers, radius);
 
 % K-Means Clustering
 
