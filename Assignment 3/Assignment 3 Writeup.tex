@@ -1,0 +1,153 @@
+%! Author = Ian's PC
+%! Date = 10/11/2023
+
+% Preamble
+\documentclass[11pt]{article}
+
+% Packages
+\usepackage{amsmath}
+\usepackage{fancyhdr}
+\usepackage[left=2cm, right=2cm]{geometry}
+\usepackage{amsfonts}
+
+\author{Ian Chen}
+\date{\today}
+
+% Header
+\fancyhf{}
+\fancyhead[L]{Ian Chen}
+\fancyhead[C]{Assignment 3 Writeup}
+\fancyhead[R]{\today}
+\pagestyle{fancy}
+
+% Document
+\begin{document}
+    \section{Programming: Camera Calibration}
+    In this problem, we are interested in solving the camera calibration problem, which determines the intrinsic
+    parameters of a camera by using an image of a rig (Calibration.jpg). We will keep this question open-minded where
+    we do not specify the key points on the rig. Instead, you are required to pick the key points by yourself.
+    Include the 2D pixel coordinates and 3D coordinates of the feature points you picked. The 2D pixel coordinates
+    should be stored in a Matlab matrix \textquoteleft Coord2d\textquoteright\ of dimension 2$\times$N, where N is the
+    number
+    of key points. The 3D coordinates of the feature points should be stored in a Matlab \textquoteleft
+    Coord3d\textquoteright\ matrix of dimension 3$\times$N. Include the following function for estimating the intrinsic
+    camera
+    parameter:
+    \begin{center}
+    [K]
+        = cameracali(Coord2d, Coord3d)
+    \end{center}
+    where \textquoteleft Coord2d\textquoteright\ and \textquoteleft Coord3d\textquoteright\ are the 2D and 3D
+    coordinates
+    of the key points you picked. K $\in$ R$^{3\times3}$ is an upper right matrix that encodes the intrinsic camera
+    parameters.\newline
+    In your writeup analyze the following:
+
+    \begin{enumerate}
+        \item \textit{Explain how you pick the 2D key points. You can use the function \textquoteleft ginput
+        \textquoteright\ to pick these featurepoints. Note that depending on the resolution of your screen, you may
+        have to rescale your image, pick the key points, and then scale it back. It is also recommended to use Matlab’s
+        SURF feature detectionto pick the strongest corner features for the 2D keypoints on the calibration image, and
+        then snap the key points you picked onto these detected key points. The \textquoteleft snapping\textquoteright\
+            procedure could be simply performing nearest neighbor search.}\newline
+        % TODO: Answer
+        Answer$\ldots$\newline
+
+        \item \textit{Explain how you compute the corresponding 3D keypoints. To this end, it is recommended that you
+        pick a 3D coordinate system, which is usually aligned with the axses of the cube box, and which the origin is
+        located at one of the corners of the cube. Then you can count thex, y, and z coordinates of the key points.}
+        \par
+        \textit{Hint: You can compute the corresponding 3d points by assigning xyz axis to the checkerboard box and
+        counting the number of units for the coordinates that each of the point lies on the box’s coordinate space.
+        I used the box corner closest to the camera as the origin.}\newline
+        Answer$\ldots$\newline
+        % TODO: Answer
+
+        \item \textit{The first step is to estimate the matrix $\prod$ = [KR, KT], where K $\in$
+            $\mathbb{R}^{3\times3}$ is the upright matrix that encodes intrinsic camera parameters, and R $\in$ SO(3)
+            and T $\in$ $\mathbb{R}^{3}$ encode the extrinsic camera parameters. Note that you will get two matrices
+            from the smallest eigenvector computation, ou can eliminate one by enforcing that each $\lambda_i$ has to be
+            positive in the following two constraints:}
+        \begin{center}
+            $\lambda_i$x$_i$ = $\prod$X$_i$,
+        \end{center}
+        \textit{where x$_i$ = (x$_i^{2d}$, y$_i^{2d}$, 1)$^T$ $\in$ $\mathbb{R}^{3}$ is the homogenous coordinate of
+        the 2D pixel coordinate of the i-th key point, and X$_i$ = (x$_i^{3d}$, y$_i^{3d}$,z$_i^{3d}$, 1)$^T$ $\in$
+            $\mathbb{R}^{4}$ is the homogenous coordinate of the i-th key point. You can use the sign of }
+        \begin{center}
+            $\sum_{i}\frac{x_{i}^{T}\prod X_{i}}{x_{i}^{T}x_{i}}$.
+        \end{center}
+
+        \item \textit{The second step is to estimate K, R, and T from matrix $\prod$. This step would involve QR
+        decomposition as well as other operations. For QR decomposition, please refer to
+        \textquoteleft CS376Lecture15note.pdf\textquoteright\ on canvas. Compute the determinant of your estimated R.
+        You should put your estimated K, R, T, and det(R) in the PDF writeup in order to earn credits.}\newline
+        Answer$\ldots$\newline
+        % TODO: Answer
+
+        \item \textit{Test your program with different configurations of 2D and 3D key points. Compare the resulting
+        intrinsic and extrinsic parameters. Answer the question where to pick key points for robust estimation of
+        intrinsic and extrinsic camera parameters.}\newline
+        Answer$\ldots$\newline
+        % TODO: Answer
+
+        \item \textbf{Extra Credit} \textit{Suppose you have marked 20 key points, and your goal is to select 10 of
+        them to estimate the camera parameters. Write a program to output the indices of these 10 keypoints. Hint:
+        You will need to consider a statistical model for the pixel and 3D coordinates of the feature points. Then
+        you need to write out the matrix $\prod$ as a function of the perturbations of the coordinates.}\newline
+        Answer$\ldots$\newline
+        % TODO: Answer
+
+        \item \textbf{Extra Credit} \textit{So far we have talked about using points for image calibration. Propose a
+        strategy that uses lines for calibration, i.e., correspondences between lines in the input image and 3D
+        lines.}\newline
+        Answer$\ldots$\newline
+        % TODO: Answer
+    \end{enumerate}
+
+
+    \section{Programming: Structure-From-Motion}
+
+    \begin{itemize}
+        \item \textit{Please mention how to pick the feature correspondences. You need to provide two visualizations,
+            one for the source image, and another for the target image. You can either color-code the corresponding
+            key points, or you can directly draw correspondences across the input images.}
+        \par
+        \textit{\textemdash Features that are clearly visible in both images with matching similarities around them.
+        They should be spaced out and in differing depths.}
+        \par
+        Answer$\ldots$\newline
+        % TODO: Answer
+
+        \item \textit{Use the provided intrinsic camera parameter matrix K and the corresponding key points to solve
+        for the essential matrix E. Note that you will have two potential solutions, where one is the negation of the
+        other.}
+        \par
+        \textit{\textemdash Done with estimation.}
+        \par
+        Answer$\ldots$\newline
+        % TODO: Answer
+
+        \item \textit{Extract the rotation $\overline{R}$ and the translation $\overline{T}$ from each resulting
+        essential matrix E. Use the sign of the induced depth for each key point to eliminate implausible essential
+        matrices and the associated rotations and translations. Compute the determinant of $\overline{R}$. You should
+        put $\overline{R}$, $\overline{T}$, and det($\overline{R}$) in
+        the PDF writeup in order to earn credits.}\newline
+        Answer$\ldots$\newline
+        % TODO: Answer
+
+        \item \textit{Please play with five sets of correspondences and compare the resulting relative
+        transformations. Discuss which set of feature correspondences lead to potentially more accurate relative pose
+        estimations.}\newline
+        Answer$\ldots$\newline
+        % TODO: Answer
+
+        \item \textbf{Extra Credit} \textit{Instead of using manually marked feature correspondences, please run
+        RANSAC to extract consistent correspondences across the two input images.}
+        \par
+        \textit{\textemdash Done and commented out of the way. Proof below}
+        \par
+        Answer$\ldots$\newline
+        % TODO: Answer
+    \end{itemize}
+\end{document}
