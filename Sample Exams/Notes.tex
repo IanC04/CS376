@@ -7,15 +7,48 @@
 % Packages
 \usepackage{amsmath}
 \usepackage{fancyhdr}
+\usepackage[left=2cm, right=2cm]{geometry}
+\usepackage{multicol}
+\setlength{\columnsep}{0.5cm}
+
+\author{Ian Chen}
+\date{\today}
 
 % Header
 \fancyhf{}
-\fancyhead[LO]{CS376 Notes}
-\fancyhead[RO]{Ian Chen, ic8683}
+\fancyhead[L]{Ian Chen}
+\fancyhead[C]{CS376 Notes}
+\fancyhead[R]{ic8683}
 \pagestyle{fancy}
 
 % Document
 \begin{document}
-    \textbf{Lecture 1}\newline
-    The algorithm is a sequence of steps that solves a problem$\ldots$\newline
+    \begin{multicols*}{2}
+        \subsection*{Linear Filters}
+        \textbf{Noise:}\newline
+        \textit{Salt \& Pepper Noise}: Random occurrences of black and white pixels\newline
+        \textit{Impulse Noise}: Random occurrences of white pixels\newline
+        \textit{Gaussian Noise}: Variations in intensity drawn from a Gaussian normal distribution\newline
+        \textbf{Filters:}\newline
+        \textit{Smoothing Filter}: Values positive, $\sum F=1$, amount of smoothing proportional to mask size, remove
+        \textquoteleft high-frequency\textquoteright components; \textquoteleft low-pass\textquoteright filter\newline
+        \textit{Correlation Filter(Cross-Correlation)}: Pixel is linear combination of surrounding pixels,
+        G=H$\otimes$F.\newline
+        \textit{Gaussian Filter}: Linear, smoothing, $\sigma$=variance, kernel=size of mask\newline
+        \textit{Sharpening Filter}: Accentuates differences with local average, subtraction\newline
+        \textit{Convolution}: Flip the filter in both dimensions (bottom to top, right to left), then apply cross
+        -correlation, G=H$\star$F, shift-invariant, superposition\newline
+        \textit{Shift Invariant}: Operator behaves the same everywhere; the value of the output depends on the
+        pattern in the image neighborhood, not the position of the neighborhood\newline
+        \textit{Superposition}: The response to a sum of inputs is the sum of the responses to the individual inputs\newline
+        \textit{Seperability}: A 2D filter is separable if it can be written as the outer product of two 1D filters\newline
+        \textit{Median Filter}: Non-linear, no new pixel values, removes spikes, good for impulse + salt \& pepper
+        noise, edge preserving\newline
+        \textit{Laplacian Filter}: Hybrid images, Unit impulse - gaussian $\approx$ laplacian of gaussian\newline
+        \subsection*{Edge Detection}
+        \textit{Edge}: rapid change in image intensity, extrema of the first derivative, zero-crossings of the second
+        derivative\newline
+        \subsection*{Seam Carving}
+        \textit{Energy}:
+    \end{multicols*}
 \end{document}
