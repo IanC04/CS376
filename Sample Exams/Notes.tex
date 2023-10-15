@@ -9,6 +9,7 @@
 \usepackage{fancyhdr}
 \usepackage[left=2cm, right=2cm]{geometry}
 \usepackage{multicol}
+\usepackage{amsfonts}
 \setlength{\columnsep}{0.5cm}
 
 \author{Ian Chen}
@@ -25,19 +26,23 @@
 \begin{document}
     \begin{multicols*}{2}
         \subsection*{Linear Filters}
-        \textbf{Noise:}\newline
+        \textbf{Noise}:\newline
         \textit{Salt \& Pepper Noise}: Random occurrences of black and white pixels\newline
         \textit{Impulse Noise}: Random occurrences of white pixels\newline
         \textit{Gaussian Noise}: Variations in intensity drawn from a Gaussian normal distribution\newline
-        \textbf{Filters:}\newline
+        \textbf{Filters}:\newline
+        \textit{Linear}: Obeys Superposition, Shift-Invariant, Casual, and Stable\newline
+        \textit{Non-Linear}: Opposite of linear\newline
         \textit{Smoothing Filter}: Values positive, $\sum F=1$, amount of smoothing proportional to mask size, remove
         \textquoteleft high-frequency\textquoteright components; \textquoteleft low-pass\textquoteright filter\newline
+        \textit{Derivative Filter}: Opposite signs to get high response in areas of high contrast, $\sum F=0$, High
+        absolute value when high contrast\newline
         \textit{Correlation Filter(Cross-Correlation)}: Pixel is linear combination of surrounding pixels,
         G=H$\otimes$F.\newline
         \textit{Gaussian Filter}: Linear, smoothing, $\sigma$=variance, kernel=size of mask\newline
         \textit{Sharpening Filter}: Accentuates differences with local average, subtraction\newline
-        \textit{Convolution}: Flip the filter in both dimensions (bottom to top, right to left), then apply cross
-        -correlation, G=H$\star$F, shift-invariant, superposition\newline
+        \textit{Convolution}: Linear, Flip the filter in both dimensions (bottom to top, right to left), then apply
+        cross-correlation, G=H$\star$F\newline
         \textit{Shift Invariant}: Operator behaves the same everywhere; the value of the output depends on the
         pattern in the image neighborhood, not the position of the neighborhood\newline
         \textit{Superposition}: The response to a sum of inputs is the sum of the responses to the individual inputs\newline
@@ -48,7 +53,38 @@
         \subsection*{Edge Detection}
         \textit{Edge}: rapid change in image intensity, extrema of the first derivative, zero-crossings of the second
         derivative\newline
+        \textit{Steps}: 1. Smooth/Suppress noise, 2. Edge enhancement/Filter for contrast, 3. Edge localization
+        /Local maxima/Threshold/Thinning\newline
+        \textbf{Canny Edge Detector}:\newline
+        \textit{Algorithm}: 1. Filter image with derivative of Gaussian then get
+        magnitude/direction of gradient, 2. Non-maximum suppression, 3. Linking and thresholding (hysteresis)\newline
+        \textit{Property}: Threshold strong edges and weak edges using two thresholds, then keep weak edges only if
+        connect to strong edges.\newline
+        \textit{Property}: Filtering a signal f with a Gaussian and then calculating its gradient is the same as
+        filtering the signal f with the first order derivative of the Gaussian.\newline
         \subsection*{Seam Carving}
-        \textit{Energy}:
+        \textit{Energy}: $\sqrt {\left(\frac{\partial f}{\partial x}\right)^2 +
+        \left(\frac{\partial f}{\partial y}\right)^2}$\newline
+        \textit{Seam}: Path of least energy, 8-connected, 1 pixel wide\newline
+        \textit{Cumulative Energy Map}: M(i,j)=Energy(i,j)+min(M(i-1,j-1),M(i-1,j),M(i-1,j+1))\newline
+        \subsection*{Template Matching}
+        \textit{Template}: Uses filters that match effect intended to search\newline
+        \textit{Algorithm}: Use normalized(Controls relative brightness) cross-correlation score to find template in
+        image\newline
+        \subsection*{Binary Image Analysis}
+        \textit{Steps}: 1. Threshold image into binary form, 2. Clean using morphological operations, 3. Extract
+        separate blobs/Connected components, 4. Describe blobs with region properties\newline
+        \textit{Otsu's Method}: Find threshold that minimizes intra-class variance\newline
+        \textbf{Morphological Operations}:\newline
+        \textit{Dilation}: Closes gaps and fills holes, I$\oplus$[1]$_{i\times i}$\newline
+        \textit{Erosion}: Erode connected components, Shrink features, Removes bridges/branches/noise, I$\ominus$[1]$_{i\times i}$\newline
+        \textit{Opening}: Erosion then dilation, removes noise/small objects, keeps original shape\newline
+        \textit{Closing}: Dilation then erosion, closes small holes inside or small black points on the object.\newline
+        \subsection*{Texture}
+        \textit{Segmentation}: Analyze/represent texture, group image regions with consistent texture\newline
+        \textit{Synthesis}: Generate new texture patches/images\newline
+        \textit{Filter Banks}: Collection of (d) features, d-dimensional vector, contain combination of scales,
+        orientation, and patterns\newline
+        \textit{First-order Markov Random Field}: Each pixel depends on its neighbors, P(X$\mid$A,B,C,D)\newline
     \end{multicols*}
 \end{document}
