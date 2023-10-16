@@ -7,7 +7,7 @@
 % Packages
 \usepackage{amsmath}
 \usepackage{fancyhdr}
-\usepackage[left=2cm, right=2cm]{geometry}
+\usepackage[top=2cm, left=2cm, right=2cm, bottom=2cm]{geometry}
 \usepackage{multicol}
 \usepackage{amsfonts}
 \setlength{\columnsep}{0.5cm}
@@ -34,7 +34,9 @@
         \textit{Linear}: Obeys Superposition, Shift-Invariant, Casual, and Stable\newline
         \textit{Non-Linear}: Opposite of linear\newline
         \textit{Smoothing Filter}: Values positive, $\sum F=1$, amount of smoothing proportional to mask size, remove
-        \textquoteleft high-frequency\textquoteright components; \textquoteleft low-pass\textquoteright filter\newline
+        high-frequency components; low-pass filter\newline
+        \textit{Low-Pass}: Smoothing, removing noise, blurring\newline
+        \textit{High-Pass}: Sharpening, accentuates edges\newline
         \textit{Derivative Filter}: Opposite signs to get high response in areas of high contrast, $\sum F=0$, High
         absolute value when high contrast\newline
         \textit{Correlation Filter(Cross-Correlation)}: Pixel is linear combination of surrounding pixels,
@@ -42,7 +44,7 @@
         \textit{Gaussian Filter}: Linear, smoothing, $\sigma$=variance, kernel=size of mask\newline
         \textit{Sharpening Filter}: Accentuates differences with local average, subtraction\newline
         \textit{Convolution}: Linear, Flip the filter in both dimensions (bottom to top, right to left), then apply
-        cross-correlation, G=H$\star$F\newline
+        cross-correlation, G=H$\star$F, $\frac{\partial}{\partial x}$(H $\star$ F) = ($\frac{\partial}{\partial x}$H) $\star$ F\newline
         \textit{Shift Invariant}: Operator behaves the same everywhere; the value of the output depends on the
         pattern in the image neighborhood, not the position of the neighborhood\newline
         \textit{Superposition}: The response to a sum of inputs is the sum of the responses to the individual inputs\newline
@@ -77,7 +79,8 @@
         \textit{Otsu's Method}: Find threshold that minimizes intra-class variance\newline
         \textbf{Morphological Operations}:\newline
         \textit{Dilation}: Closes gaps and fills holes, I$\oplus$[1]$_{i\times i}$\newline
-        \textit{Erosion}: Erode connected components, Shrink features, Removes bridges/branches/noise, I$\ominus$[1]$_{i\times i}$\newline
+        \textit{Erosion}: Erode connected components, Shrink features, Removes bridges/branches/noise,
+        I$\ominus$[1]$_{i\times i}$\newline
         \textit{Opening}: Erosion then dilation, removes noise/small objects, keeps original shape\newline
         \textit{Closing}: Dilation then erosion, closes small holes inside or small black points on the object.\newline
         \subsection*{Texture}
@@ -86,5 +89,86 @@
         \textit{Filter Banks}: Collection of (d) features, d-dimensional vector, contain combination of scales,
         orientation, and patterns\newline
         \textit{First-order Markov Random Field}: Each pixel depends on its neighbors, P(X$\mid$A,B,C,D)\newline
+        \textit{Single Pixel Synthesis}: To synthesize x, pick one matching window at random, assign x to be the
+        center pixel of that window, find the best matches using SSD error and randomly choose between them,
+        preferring better matches with higher probability\newline
+        \textit{Window size}: Larger$\rightarrow$More uniform, Smaller$\rightarrow$More randomness\newline
+        % TODO: Review synthesis
+        \textit{Image Quilting}: Synthesize texture by stitching together overlapping patches from a sample image\newline
+        \subsection*{Optical Flow}
+        % TODO: Review optical flow aka lecture 6
+        \subsection*{Hough Transform}
+        \textit{Algorithm}: 1. Get edges of image, 2. For each edge point vote for possible parameters(Increment
+        accumulator array), 3. Threshold accumulator array to find matches\newline
+        \textit{Pros}: All points are processed independently, so can cope with occlusion/gaps, Some robustness to
+        noise: noise points unlikely to contribute \textit{consistently} to any single bin, Can detect multiple
+        instances of a model in a single pass\newline
+        \textit{Cons}: Complexity of search time increases exponentially with the number of model parameters,
+        Non-target shapes can produce spurious peaks in parameter space, Quantization: can be tricky to pick a good
+        grid size\newline
+        \subsection*{RANSAC}
+        \textit{Description}: Choose s(minimum size for fitting) samples, Fit a model to the samples, Count inliers,
+        Repeat then take model with largest set of inliers\newline
+        \textit{Adaptive RANSAC Algorithm}:
+        \texttt{Let N=$\infty$, S$_{IN}$=$\emptyset$ and iter=0\newline
+        While N $>$ iter:\newline
+        Estimate parameters a$_{tst}$ from a random n-tuple from S\newline
+        Determine inlier set S$_{tst}$, i.e., data points within a distance t of the model y = f(x; a$_{tst}$)\newline
+        If $\mid$S$_{tst}$$\mid$ $>$ $\mid$S$_{IN}$$\mid$:\newline
+        Set S$_{IN}$ = S$_{TST}$, a = a$_{tst}$, w = $\frac{\mid S_{IN}\mid}{\mid S\mid}$ and N =
+            $\frac{\log(1-p)}{\log(1-w^n)}$ with p = 0.99\newline
+            end-if\newline
+            iter++\newline
+            end-while}\newline
+        \textit{Pros}: Robust iterative method for estimating the parameters of a mathematical model from a set of
+        observed data containing outliers, Separates the observed data into inliers and outliers, Can be applied in an
+        iterative manner to obtain multiple models\newline
+        \textit{Cons}: Not perfect\newline
+        \subsection*{Robust Fitting}
+        \textit{Description}: Non-linear optimization problem that must be solved iteratively, Least squares solution
+        can be used for initialization, Adaptive choice of scale: approx. 1.5 times median residual\newline
+        \subsection*{Active Contours-Snakes}
+        \textbf{Internal Energy}:\newline
+        \textit{Formula}: E$_{S}$ = $\alpha$ $\mid\frac{dv}{ds}\mid^2 + \beta\mid\frac{d^2v}{ds^2}\mid^2$\newline
+        \textit{Elasticity}: 1st-order term, Membrane, $\alpha$ controls tension along spline, Stretching balloon
+        /elastic band, Ideal curve is point\newline
+        \textit{Stiffness}: 2nd-order term, Thin plate, $\beta$ controls rigidity of spline, Bending thin plate
+        /wire, Ideal curve is circle\newline
+        \textit{Cons}: Sensitive to initial position/parameters, Small capture range, Fails to detect
+        concavities\newline
+        \subsection*{Level Sets}
+        \textit{Description}: Embed curve in one higher dimension; curve is given by zero level set of implicit
+        function (i.e., intersection of function with z=0)\newline
+        \textit{Pros}: Curve may change topology and form sharp corners(\textquoteleft weak solutions\textquoteright),
+        Discrete grid and finite differences approximate solution, Intrinsic geometric properties are easily
+        determined(normal vector, curvature), Formulation is same for 2D or 3D\newline
+        \subsection*{Grouping}
+        \textit{Bottom-Up}: Pixels belong together because they look similar\newline
+        \textit{Top-Down}: Pixels belong together because they are from the same object\newline
+        \textbf{Bottom-Up Segmentation via Clustering}:\newline
+        \textit{Description}: Separate image into coherent objects, Group together similar-looking pixels for
+        efficiency of further processing\newline
+        \textit{Algorithms}: Mode finding and mean shift: k-means, EM, mean-shift, Graph-based: normalized cuts\newline
+        \textit{Features}: Color, texture, Quantization for texture summaries\newline
+        \textit{Clustering}: Unsupervised learning, Detect patterns in unlabeled data, Useful when don’t know what
+        you’re looking for, Requires data, but no labels\newline
+        \textbf{K-means}:\newline
+        \textit{Algorithm}: 1. Randomly initialize k cluster centers, 2. Assign each point to nearest cluster center,
+        3. Solve for mean of each cluster, 4. Repeat until convergence\newline
+        \textit{Pros}: Simple, Fast to compute, Converges to local minimum of within-cluster squared error
+        \textit{Cons}: Simple, Non-deterministic, Requires initial means and k, Sensitive to initial centers, Sensitive
+        to outliers, Detects spherical clusters, Assuming means can be computed\newline
+        \textbf{Mean Shift}:\newline
+        \textit{Description}: Cluster: all data points in the attraction basin of a mode, Attraction basin: the
+        region for which all trajectories lead to the same mode, Find features (color, gradients, texture, etc),
+        Initialize windows at individual feature points, Perform mean shift for each window until convergence, Merge
+        windows that end up near the same “peak” or mode\newline
+        \textit{Pros}: Does not assume shape on clusters, One parameter choice (window size, aka “bandwidth”), Generic
+        technique, Find multiple modes\newline
+        \textit{Cons}: Selection of window size, Does not scale well with dimension of feature space\newline
+        \textbf{Normalized Cuts}:\newline
+        \textit{Pros}: Generic framework, flexible to choice of function that computes weights (“affinities”) between
+        nodes, Does not require model of the data distribution\newline
+        \textit{Cons}: Time complexity can be high, Preference for balanced partitions\newline
     \end{multicols*}
 \end{document}
