@@ -25,14 +25,11 @@
 % Document
 \begin{document}
     \begin{multicols*}{2}
-        \subsection*{Linear Filters}
-        \textbf{Noise}:\newline
-        \textit{Salt \& Pepper Noise}: Random occurrences of black and white pixels\newline
+        \paragraph*{Linear Filters}
         \textit{Impulse Noise}: Random occurrences of white pixels\newline
         \textit{Gaussian Noise}: Variations in intensity drawn from a Gaussian normal distribution\newline
         \textbf{Filters}:\newline
         \textit{Linear}: Obeys Superposition, Shift-Invariant, Casual, and Stable\newline
-        \textit{Non-Linear}: Opposite of linear\newline
         \textit{Smoothing Filter}: Values positive, $\sum F=1$, amount of smoothing proportional to mask size, remove
         high-frequency components; low-pass filter\newline
         \textit{Low-Pass}: Smoothing, removing noise, blurring\newline
@@ -51,8 +48,8 @@
         \textit{Seperability}: A 2D filter is separable if it can be written as the outer product of two 1D filters\newline
         \textit{Median Filter}: Non-linear, no new pixel values, removes spikes, good for impulse + salt \& pepper
         noise, edge preserving\newline
-        \textit{Laplacian Filter}: Hybrid images, Unit impulse - gaussian $\approx$ laplacian of gaussian\newline
-        \subsection*{Edge Detection}
+        \textit{Laplacian Filter}: Hybrid images, Unit impulse - gaussian $\approx$ laplacian of gaussian
+        \paragraph*{Edge Detection}
         \textit{Edge}: rapid change in image intensity, extrema of the first derivative, zero-crossings of the second
         derivative\newline
         \textit{Steps}: 1. Smooth/Suppress noise, 2. Edge enhancement/Filter for contrast, 3. Edge localization
@@ -63,17 +60,17 @@
         \textit{Property}: Threshold strong edges and weak edges using two thresholds, then keep weak edges only if
         connect to strong edges.\newline
         \textit{Property}: Filtering a signal f with a Gaussian and then calculating its gradient is the same as
-        filtering the signal f with the first order derivative of the Gaussian.\newline
-        \subsection*{Seam Carving}
+        filtering the signal f with the first order derivative of the Gaussian.
+        \paragraph*{Seam Carving}
         \textit{Energy}: $\sqrt {\left(\frac{\partial f}{\partial x}\right)^2 +
         \left(\frac{\partial f}{\partial y}\right)^2}$\newline
         \textit{Seam}: Path of least energy, 8-connected, 1 pixel wide\newline
-        \textit{Cumulative Energy Map}: M(i,j)=Energy(i,j)+min(M(i-1,j-1),M(i-1,j),M(i-1,j+1))\newline
-        \subsection*{Template Matching}
+        \textit{Cumulative Energy Map}: M(i,j)=Energy(i,j)+min(M(i-1,j-1),M(i-1,j),M(i-1,j+1))
+        \paragraph*{Template Matching}
         \textit{Template}: Uses filters that match effect intended to search\newline
         \textit{Algorithm}: Use normalized(Controls relative brightness) cross-correlation score to find template in
-        image\newline
-        \subsection*{Binary Image Analysis}
+        image
+        \paragraph*{Binary Image Analysis}
         \textit{Steps}: 1. Threshold image into binary form, 2. Clean using morphological operations, 3. Extract
         separate blobs/Connected components, 4. Describe blobs with region properties\newline
         \textit{Otsu's Method}: Find threshold that minimizes intra-class variance\newline
@@ -82,8 +79,8 @@
         \textit{Erosion}: Erode connected components, Shrink features, Removes bridges/branches/noise,
         I$\ominus$[1]$_{i\times i}$\newline
         \textit{Opening}: Erosion then dilation, removes noise/small objects, keeps original shape\newline
-        \textit{Closing}: Dilation then erosion, closes small holes inside or small black points on the object.\newline
-        \subsection*{Texture}
+        \textit{Closing}: Dilation then erosion, closes small holes inside or small black points on the object.
+        \paragraph*{Texture}
         \textit{Segmentation}: Analyze/represent texture, group image regions with consistent texture\newline
         \textit{Synthesis}: Generate new texture patches/images\newline
         \textit{Filter Banks}: Collection of (d) features, d-dimensional vector, contain combination of scales,
@@ -93,11 +90,10 @@
         center pixel of that window, find the best matches using SSD error and randomly choose between them,
         preferring better matches with higher probability\newline
         \textit{Window size}: Larger$\rightarrow$More uniform, Smaller$\rightarrow$More randomness\newline
-        % TODO: Review synthesis
-        \textit{Image Quilting}: Synthesize texture by stitching together overlapping patches from a sample image\newline
-        \subsection*{Optical Flow}
-        % TODO: Review optical flow aka lecture 6
-        \subsection*{Hough Transform}
+        \textit{Image Quilting}: Synthesize texture by stitching together overlapping patches from a sample image
+        \paragraph*{Optical Flow}
+        \textit{Description}: Distribution of the apparent velocities of objects\newline
+        \paragraph*{Hough Transform}
         \textit{Algorithm}: 1. Get edges of image, 2. For each edge point vote for possible parameters(Increment
         accumulator array), 3. Threshold accumulator array to find matches\newline
         \textit{Pros}: All points are processed independently, so can cope with occlusion/gaps, Some robustness to
@@ -105,8 +101,8 @@
         instances of a model in a single pass\newline
         \textit{Cons}: Complexity of search time increases exponentially with the number of model parameters,
         Non-target shapes can produce spurious peaks in parameter space, Quantization: can be tricky to pick a good
-        grid size\newline
-        \subsection*{RANSAC}
+        grid size
+        \paragraph*{RANSAC}
         \textit{Description}: Choose s(minimum size for fitting) samples, Fit a model to the samples, Count inliers,
         Repeat then take model with largest set of inliers\newline
         \textit{Adaptive RANSAC Algorithm}:
@@ -123,11 +119,11 @@
         \textit{Pros}: Robust iterative method for estimating the parameters of a mathematical model from a set of
         observed data containing outliers, Separates the observed data into inliers and outliers, Can be applied in an
         iterative manner to obtain multiple models\newline
-        \textit{Cons}: Not perfect\newline
-        \subsection*{Robust Fitting}
+        \textit{Cons}: Not perfect
+        \paragraph*{Robust Fitting}
         \textit{Description}: Non-linear optimization problem that must be solved iteratively, Least squares solution
-        can be used for initialization, Adaptive choice of scale: approx. 1.5 times median residual\newline
-        \subsection*{Active Contours-Snakes}
+        can be used for initialization, Adaptive choice of scale: approx. 1.5 times median residual
+        \paragraph*{Active Contours-Snakes}
         \textbf{Internal Energy}:\newline
         \textit{Formula}: E$_{S}$ = $\alpha$ $\mid\frac{dv}{ds}\mid^2 + \beta\mid\frac{d^2v}{ds^2}\mid^2$\newline
         \textit{Elasticity}: 1st-order term, Membrane, $\alpha$ controls tension along spline, Stretching balloon
@@ -135,14 +131,14 @@
         \textit{Stiffness}: 2nd-order term, Thin plate, $\beta$ controls rigidity of spline, Bending thin plate
         /wire, Ideal curve is circle\newline
         \textit{Cons}: Sensitive to initial position/parameters, Small capture range, Fails to detect
-        concavities\newline
-        \subsection*{Level Sets}
+        concavities
+        \paragraph*{Level Sets}
         \textit{Description}: Embed curve in one higher dimension; curve is given by zero level set of implicit
         function (i.e., intersection of function with z=0)\newline
         \textit{Pros}: Curve may change topology and form sharp corners(\textquoteleft weak solutions\textquoteright),
         Discrete grid and finite differences approximate solution, Intrinsic geometric properties are easily
-        determined(normal vector, curvature), Formulation is same for 2D or 3D\newline
-        \subsection*{Grouping}
+        determined(normal vector, curvature), Formulation is same for 2D or 3D
+        \paragraph*{Grouping}
         \textit{Bottom-Up}: Pixels belong together because they look similar\newline
         \textit{Top-Down}: Pixels belong together because they are from the same object\newline
         \textbf{Bottom-Up Segmentation via Clustering}:\newline
@@ -169,6 +165,13 @@
         \textbf{Normalized Cuts}:\newline
         \textit{Pros}: Generic framework, flexible to choice of function that computes weights (“affinities”) between
         nodes, Does not require model of the data distribution\newline
-        \textit{Cons}: Time complexity can be high, Preference for balanced partitions\newline
+        \textit{Cons}: Time complexity can be high, Preference for balanced partitions
+        \paragraph*{Harris Corner Detector}
+        \textit{Algorithm}: Compute M matrix for each image window to get their cornerness scores, 2. Find points
+        whose surrounding window gave large corner response (f> threshold), 3. Take the points of local maxima, i.e.,
+        perform non-maximum suppression\newline
+        \textit{Properties}: Rotation invariant, Not scale invariant
+        \paragraph*{Scale Invariant Feature Transform(SIFT)}
+        \textit{Properties}: Rotation+Scale invariant, Partially Illumination+Camera Viewpoint+Occlusion invariant\newline
     \end{multicols*}
 \end{document}
