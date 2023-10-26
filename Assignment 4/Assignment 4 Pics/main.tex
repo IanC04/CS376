@@ -1,0 +1,224 @@
+%% LyX 2.0.6dev created this file.  For more info, see http://www.lyx.org/.
+%% Do not edit unless you really know what you are doing.
+\documentclass[english]{article}
+\usepackage[latin9]{inputenc}
+\usepackage{geometry}
+\geometry{verbose,tmargin=1in,bmargin=1in,lmargin=1in,rmargin=1in}
+\usepackage{babel}
+\usepackage{array}
+\usepackage{verbatim}
+\usepackage{amsmath}
+\usepackage{amssymb}
+ \usepackage{algorithm}
+ \usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage[unicode=true,pdfusetitle,
+ bookmarks=true,bookmarksnumbered=false,bookmarksopen=false,
+ breaklinks=false,pdfborder={0 0 1},backref=section,colorlinks=false]
+ {hyperref}
+\usepackage{breakurl}
+
+\makeatletter
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% LyX specific LaTeX commands.
+%% Because html converters don't know tabularnewline
+\providecommand{\tabularnewline}{\\}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% User specified LaTeX commands.
+\usepackage{babel}
+\usepackage{babel}
+\usepackage{cite}\usepackage{amsthm}\usepackage{dsfont}\usepackage{array}\usepackage{mathrsfs}\usepackage{comment}\onecolumn
+
+\usepackage{color}\usepackage{babel}
+\newcommand{\mypara}[1]{\paragraph{#1.}}
+
+\newcommand{\R}{\mathbb{R}}
+\let\bs=\boldsymbol
+
+
+\def \transpose {\mathrm{T}}
+\def \score {\mathit{score}}
+\def \E {\mathbb{E}}
+
+% math equations that are widely used
+\def \SigmaA {\Sigma_{2,n}(A)}
+\def \SigmaLG {\Sigma_{1,m}(L^{\set{G}})}
+\def \soIm   {(\bs{s}\otimes I_{m})}
+\def \stoIm   {(\bs{s}^{T}\otimes I_{m})}
+\def \UoIm   {(U \otimes I_{m})}
+\def \UtoIm   {(U^{T} \otimes I_{m})}
+\def \Ainverse {U(\Sigma_{2,n}(A) - \lambda_1(A))^{-1}U^{T}}
+
+\def \Diag {\mathrm{Diag}}
+\def \diag {\mathrm{diag}}
+\def \det {\mathrm{det}}
+\def \trace {\mathrm{Tr}}
+\def \Pr {\mathrm{Pr}}
+\def \objective {\mathit{obj}}
+\def \area {\mathit{area}}
+\def \domain {\set{D}}
+\def \opt {\set{opt}}
+\def \row {\mathit{row}}
+\def \Trace{\mathit{Trace}}
+\def \inconsistent {\textup{Conflict}}
+\def \unary {\mathit{unary}}
+\def \median {\textup{median}}
+\def \exclusive {\textup{exclusive}}
+\def \saliency {\textup{\saliency}}
+\def \flow {\mathit{flow}}
+\def \adj {\mathit{adj}}
+\def \gt {\mathit{gt}}
+\def \noise {\mathit{noise}}
+\def \intra {\textup{intra}}
+\def \inter {\textup{inter}}
+\def \init {\mathit{in}}
+\def \path {\mathit{path}}
+\def \map {\mathit{map}}
+\def \label {\mathit{label}}
+\def \match {\mathit{match}}
+\def \consistency {\mathit{consistency}}
+\def \induced {\mathit{indu}}
+\def \composition {\mathit{compose}}
+\def \minimize {\textup{minimize} }
+\def \maximize {\textup{maximize}}
+\def \subjectto {\textup{subject to}}
+\def \current {\textup{cur}}
+\def \noise {\textup{n}}
+\def \bR {\overline{R}}
+
+
+
+\usepackage{babel}
+\usepackage{arydshln}
+\date{}
+
+\makeatother
+
+\theoremstyle{plain}
+\newtheorem{sol}{\textbf{Solution}}
+\newtheorem*{sol*}{\textbf{Solution}}
+\newtheorem{lem}{\textbf{Lemma}}
+\newtheorem{prop}{\textbf{Proposition}}
+\newtheorem{theorem}{\textbf{Theorem}}
+\newtheorem{corollary}{\textbf{Corollary}}
+\newtheorem{assumption}{\textbf{Assumption}}
+\newtheorem{example}{\textbf{Example}}
+\newtheorem{definition}{\textbf{Definition}}
+\newtheorem{remark}{\textbf{Remark}}
+\newtheorem{fact}{\textbf{Fact}} \theoremstyle{definition}
+\numberwithin{theorem}{section}
+\numberwithin{lem}{section}
+\numberwithin{definition}{section}
+\numberwithin{remark}{section}
+\numberwithin{fact}{section}
+
+\let\vec=\mathbf \let\mat=\mathbf \let\set=\mathcal \global\long\def\para#1{\noindent{\bf #1}}
+ %\newcommand{\para}[1]{\noindent{\bf #1}\hspace{1em}}
+%\newcommand{\set}[1]{{\textstyle{\mathcal #1}}}
+\newcommand{\code}{\texttt}
+
+\global\long\def\Diag{\mathrm{Diag}}
+ \global\long\def\diag{\mathrm{diag}}
+ \global\long\def\objective{\mathit{obj}}
+ \global\long\def\area{\mathit{area}}
+ \global\long\def\domain{\set{D}}
+ \global\long\def\opt{\set{opt}}
+ \global\long\def\minimize{\textup{minimize}}
+ \global\long\def\subjectto{\textup{subject to}}
+
+
+\global\long\def\minimize{\textup{minimize} }
+ \global\long\def\maximize{\textup{maximize}}
+ \global\long\def\subjectto{\textup{subject to}}
+ \global\long\def\R{\mathbb{R}}
+
+\begin{document}
+
+
+\title{\textbf{CS376: Computer Vision: Assignment 4 \\ Due: Apr. 5th, 11:59 PM}}
+
+\author{}
+
+\maketitle
+\noindent\textbf{Instruction:} You must answer the Short Answer Problems. You may choose either Programming Track(Image Classification) or Theory Track. 100 points in total.
+
+\section{Short answer problems [30 pts]}
+
+\noindent\textbf{1.} What is the relation between image classification and object detection? Please give two concrete examples on how they are related (e.g., one is applied to solve another)? \\
+
+\vspace{0.5in}
+
+\noindent\textbf{2.} Please compare semantic segmentation, instance segmentation and object detection. Describe the similarities and differences.\\
+
+\vspace{0.5in} 
+
+\noindent\textbf{3.} Describe at least two plausible neural network designs for the task of semantic segmentations.\\
+
+\vspace{0.5in} 
+
+\noindent\textbf{4.} What are the applications of generative models in solving core computer vision tasks.\\
+
+\vspace{0.5in} 
+
+\noindent\textbf{5.} Discuss the differences between convolution neural networks and deconvolution neural networks.\\
+
+\vspace{0.5in} 
+
+
+\section{Image Classification (70 points)}
+
+Our task is to perform image classification using the CIFAR-10 dataset, which consists of 50K training images and 10K testing images. We will experiment with two categories of methods: non-parametric methods and parametric methods. Our goal is to understand the performance of each method on this dataset. Our specific aims are:
+\begin{itemize}
+\item Compare the performance between K-Nearest Neighbor classifier and Adaptive  Boosting  classifier;
+\item Analyze the performance of these two methods when varying the size of the training set and the size of the testing set;
+\item Perform cross-validation to study the hyper-parameters of each method;
+\item Try different feature representations. 
+\end{itemize}
+
+\noindent\textbf{Step 0: Download the CIFAR-10 data set.} The dataset can be downloaded from \url{https://www.cs.toronto.edu/~kriz/cifar.html}. 
+\vspace{0.2in}
+
+\noindent\textbf{Step 1 (15 points): K-nearest neighbor classifier.} Implement the k-nearest neighbor classifier with $k = 10$. Each image of size $32\times 32\times 3$ is represented as a vector with dimension $3072$. Please report an overall accuracy as well as a confusion matrix. \textbf{Hint:} For saving computation cost, it is recommended that you can use a low-dimensional projection matrix $P\in \R^{m\times 3072}$ to reduce the feature dimension of each image. This projection matrix $P$ may be computed using principal component analysis (via SVD) among the training images. 
+
+
+\vspace{0.2in}
+\noindent\textbf{Step 2 (30 points): Adaptive Boosting classifier.} For this part, you are asked to implement an AdaBoosting method to classify the images described above. We show follow the following two major steps:
+\begin{itemize}
+\item Weak feature computation (10 points). We will implement the features used in Viola-Jone's face detector, i.e., the Haar Features. \url{https://www.cs.cmu.edu/~efros/courses/LBMV07/Papers/viola-IJCV-01.pdf}. See Section 2 of the paper for the detailed description. Basically, you first pre-compute an integral image from each image, you then use this integral image to generate Haar features. For efficiency, it is suggested that you use 1K-2K Haar features rather than all the possibilities (hundreds of thousands). This can be down by choosing a random subset. Note that this random subset has to be consistent across all the training images. Moreover, the image dimension in CIFAR-10 is slightly bigger, i.e., $32\times 32$ versus $24\times 24$.
+\item (10 points) Train an Adaboost classifier for each class, i.e., using the one-versus-all mode. Since for each classifier, the number of negative instances is nine times more than the number of positive instances, you have to balance the initial weight. Please refer to slide 10 of Lecture 19 regarding the Adaboosting algorithm.
+\item (10 points) Combine these one-versus-all classifiers into a multi-class image classifier. Please report the overall accuracy.
+\end{itemize}
+
+\vspace{0.2in}
+\noindent\textbf{Step 3 (5 points): Comparison.} Please compare the performance of the K-nearest neighbor classifier and the Adaboosting classifier. Which classes does K-nearest neighbor do better and which classes does Adaboosting do better, and why? How about running time?
+
+\vspace{0.2in}
+\noindent\textbf{Step 4 (10 points): Cross-validation.} Perform 5-fold cross-validation for the K-nearest neighbor classifier. Report the optimized hyper-parameter $K$ and the corresponding confusion matrix.
+
+\vspace{0.2in}
+\noindent\textbf{Step 5 (10 points): Cross-validation II.} Perform 5-fold cross-validation for the AdaBoosting classifier. Report the optimal value for the number of weak classifiers. 
+
+\vspace{0.2in}
+\noindent\textbf{Tips}: Please check piazza post for tips.
+
+
+\section*{Submission instructions:}
+
+\noindent Create a single \textbf{zip} file so submit on Canvas that includes
+\begin{itemize}
+\item Your well-commented code, including the files and functions named as specified above.
+\item A \textbf{PDF} writeup of your results with embedded figures where relevant.
+\end{itemize}
+
+\noindent Please do not include any saved matrices or images etc. within your zip file.
+
+
+\renewcommand\refname{}
+\vspace{-0.4in}
+\bibliographystyle{abbrv}
+
+\bibliography{sync}
+
+
+
+\end{document}
