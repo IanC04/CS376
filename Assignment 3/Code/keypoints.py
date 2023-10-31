@@ -2,34 +2,31 @@ import cv2
 import numpy as np
 import matplotlib.pyplot as plt
 
-defaultImg = cv2.imread("../Assignment 3 Pics/Calibration.jpg")
-defaultImg = cv2.cvtColor(defaultImg, cv2.COLOR_BGR2RGB)
-window_name = "keypoints_window"
+calibrationImg = cv2.imread("../Assignment 3 Pics/Calibration.jpg")
+calibrationImg = cv2.cvtColor(calibrationImg, cv2.COLOR_BGR2RGB)
 
-def get2D() -> np.ndarray:
+# Center of the Calibration checkerboard box
+center = (1971, 1865)
+
+NEON_GREEN = (57, 255, 0)
+
+
+def get2D(kp: np.ndarray) -> np.ndarray:
+    '''
+    Get the coordinates of the keypoints rounded to the nearest pixel
+    :param kp: Keypoints which contain the (x, y) coordinates to round
+    :return:
+    '''
+    kp_coords = np.array([k.pt for k in kp])
+    kp_coords = np.array([(round(x) - center[0], round(y) - center[1]) for x, y in kp_coords]).T
+    return kp_coords
+
+
+def get3D(kp_px: np.ndarray) -> np.ndarray:
     pass
 
 
-def get3D() -> np.ndarray:
-    pass
-
-def displayImage(plot, index, img: np.ndarray, title: str) -> None:
-    if img is None:
-        raise ValueError("Image is None in displayImage()")
-
-    plot[index].set_title(title)
-    plot[index].imshow(img)
-
-    # # Waits for keypress to prevent instant closing
-    # cv2.waitKey(0)
-    # # Close all open windows
-    # cv2.destroyAllWindows()
-
-
-def calculate(img: np.ndarray = defaultImg) -> (np.ndarray, np.ndarray):
-    # Two plots for the images
-    fx, plots = plt.subplots(1, 2, figsize=(20, 10))
-
+def calculate(img: np.ndarray = calibrationImg) -> (np.ndarray, np.ndarray):
     # Convert to grayscale image
     sift = cv2.SIFT.create()
 
@@ -39,28 +36,41 @@ def calculate(img: np.ndarray = defaultImg) -> (np.ndarray, np.ndarray):
 
     kp = np.array(kp)
     des = np.array(des)
-
-    img = cv2.drawKeypoints(grayImg, kp, img, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-
-    displayImage(plots, 0, img, "All Keypoints")
+    kp_img = cv2.drawKeypoints(img, kp, None, color=NEON_GREEN, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
     kp_res = np.array([k.response for k in kp])
-    sorted_indices = kp_res.argsort()
+    sorted_kp_indices = kp_res.argsort()
 
-    kp_threshold = kp[sorted_indices[-100:]]
-    des_threshold = des[sorted_indices[-100:]]
+    kp_threshold = kp[sorted_kp_indices[-20:]]
+    des_threshold = des[sorted_kp_indices[-20:]]
+    kp_img_threshold = cv2.drawKeypoints(img, kp_threshold, None, color=NEON_GREEN,
+                                         flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
 
-    img_threshold = cv2.drawKeypoints(grayImg, kp_threshold, img, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
+    # Display the images
+    displayImage(["All Keypoints", "Top 20 Keypoints"], kp_img, kp_img_threshold, display_result=False,
+                 save_result=True, file_title="keypoints")
 
-    displayImage(plots, 1, img_threshold, "Top 100 Keypoints")
-
-    two_d = get2D()
-
-    three_d = get3D()
-
-    # Keypoints figure
-    plt.savefig("../Output Pictures/keypoints.png", dpi=1200)
+    two_d = get2D(kp_threshold)
+    three_d = get3D(kp_threshold)
     return two_d, three_d
+
+
+def displayImage(titles: list, *images: np.ndarray, save_result: bool = True, display_result: bool = False, file_title:
+str = None) -> None:
+    if images is None or len(images) == 0:
+        raise ValueError("Invalid images in displayImage()")
+    # Two plots for the images
+    fx, plot = plt.subplots(1, len(images), figsize=(20, 10))
+    for index, img in enumerate(images):
+        plot[index].set_title(titles[index])
+        plot[index].imshow(img)
+
+    if save_result:
+        # Keypoints figure
+        plt.savefig(f"../Output Pictures/{file_title}.png", dpi=1200)
+    if display_result:
+        plt.show()
+
 
 if __name__ == "__main__":
     calculate()

@@ -9,6 +9,8 @@
 \usepackage{fancyhdr}
 \usepackage[left=2cm, right=2cm]{geometry}
 \usepackage{amsfonts}
+\usepackage{graphics}
+\usepackage{graphicx}
 
 \author{Ian Chen}
 \date{\today}
@@ -50,8 +52,10 @@
         SURF feature detectionto pick the strongest corner features for the 2D keypoints on the calibration image, and
         then snap the key points you picked onto these detected key points. The \textquoteleft snapping\textquoteright\
             procedure could be simply performing nearest neighbor search.}\newline
+        To pick 2D key points, I used the SIFT algorithm, then I used the 20 strongest features.\newline
+        Duplicates are due to different orientations of the same feature, which provide stability to the image.\newline
+        \noindent\makebox[\textwidth]{\includegraphics[width=\paperwidth]{Output Pictures/keypoints}}\newline
         % TODO: Answer
-        Answer$\ldots$\newline
 
         \item \textit{Explain how you compute the corresponding 3D keypoints. To this end, it is recommended that you
         pick a 3D coordinate system, which is usually aligned with the axses of the cube box, and which the origin is
