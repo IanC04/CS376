@@ -39,10 +39,14 @@ def createAlgebraicMatrix(imagePoints, worldPoints):
     return A
 
 
-def getIntrinsicMatrix(P: np.ndarray) -> np.ndarray:
+def decomposeProjectionMatrix(P: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
     K, R = np.linalg.qr(P[:, :3])
-    t = np.linalg.inv(K) @ P[:, 3]
-    return K
+    t = np.linalg.inv(K) @ P[:, 3].reshape((3, 1))
+    return K, R, t
+
+
+def getExtrinsicMatrix(P: np.ndarray) -> np.ndarray:
+    pass
 
 
 def calculate(Coord2d: np.ndarray, Coord3d: np.ndarray) -> np.ndarray:
@@ -54,8 +58,8 @@ def calculate(Coord2d: np.ndarray, Coord3d: np.ndarray) -> np.ndarray:
     :return:
     """
     P = getProjectionMatrix(Coord2d, Coord3d)
-    K = getIntrinsicMatrix(P)
-    return K, P
+    K, R, t = decomposeProjectionMatrix(P)
+    return K
 
 
 if __name__ == "__main__":

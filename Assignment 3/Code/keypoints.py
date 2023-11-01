@@ -52,7 +52,7 @@ def calculate(img: np.ndarray = calibrationImg) -> (np.ndarray, np.ndarray):
     #                                      flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     #
     # # Display the images
-    # displayImage(["All Keypoints", "Top 20 Keypoints"], kp_img, kp_img_threshold, display_result=False,
+    # manageImage(["All Keypoints", "Top 20 Keypoints"], kp_img, kp_img_threshold, display_result=False,
     #              save_result=True, file_title="keypoints")
     """
     Calculates the 2D and 3D coordinates of the keypoints in the image
@@ -66,10 +66,10 @@ def calculate(img: np.ndarray = calibrationImg) -> (np.ndarray, np.ndarray):
     return two_d, three_d
 
 
-def displayImage(titles: list, *images: np.ndarray, save_result: bool = True, display_result: bool = False, file_title:
+def manageImage(titles: list, *images: np.ndarray, save_result: bool = False, display_result: bool = False, file_title:
 str = None) -> None:
     if images is None or len(images) == 0:
-        raise ValueError("Invalid images in displayImage()")
+        raise ValueError("Invalid images in manageImage()")
     # Two plots for the images
     fx, plot = plt.subplots(1, len(images), figsize=(20, 10))
     for index, img in enumerate(images):
