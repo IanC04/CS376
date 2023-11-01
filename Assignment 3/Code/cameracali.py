@@ -4,10 +4,14 @@ import keypoints
 
 
 def getProjectionMatrix(Coord2d: np.ndarray, Coord3d: np.ndarray) -> np.ndarray:
-    A = createAlgebraicMatrix(Coord2d, Coord3d)
-    U, S, V = np.linalg.svd(A)
-    smallest_eigenvector = V[:, -1]
+    M = createAlgebraicMatrix(Coord2d, Coord3d)
+    M = M.T @ M
+    eigenvalues, eigenvectors = np.linalg.eig(M)
+    smallest_eigenvector = eigenvectors[:, -1]
     P = smallest_eigenvector.reshape((3, 4))
+    # Make sure projection matrix has determinant > 0
+    if(np.linalg.det(P[:, :3]) < 0):
+        P = -P
     return P
 
 
@@ -40,8 +44,28 @@ def createAlgebraicMatrix(imagePoints, worldPoints):
 
 
 def decomposeProjectionMatrix(P: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
-    K, R = np.linalg.qr(P[:, :3])
+    K = np.zeros(shape=(3, 3))
+    R = np.zeros(shape=(3, 3))
+    u0 = P[0, :3]
+    u1 = P[1, :3]
+    u2 = P[2, :3]
+
+    K[2, 2] = np.linalg.norm(u2)
+    R[2, :] = (u2 / K[2, 2]).reshape((1, 3))
+
+    K[1, 2] = u1 @ R[2, :]
+    K[1, 1] = np.linalg.norm(u1 - (K[1, 2] * R[2, :]))
+    R[1, :] = (u1 - (K[1, 2] * R[2, :])) / K[1, 1]
+
+    K[0, 2] = u0 @ R[2, :]
+    K[0, 1] = u0 @ R[1, :]
+    K[0, 0] = np.linalg.norm(u0 - (K[0, 1] * R[1, :]) - (K[0, 2] * R[2, :]))
+
+    R[0, :] = (u0 - (K[0, 1] * R[1, :]) - (K[0, 2] * R[2, :])) / K[0, 0]
     t = np.linalg.inv(K) @ P[:, 3].reshape((3, 1))
+    K = K / K[2, 2]
+    det = np.linalg.det(R)
+    assert 0.5 < det < 1.5
     return K, R, t
 
 
