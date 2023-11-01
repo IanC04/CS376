@@ -4,19 +4,19 @@ import keypoints
 
 
 def getProjectionMatrix(Coord2d: np.ndarray, Coord3d: np.ndarray) -> np.ndarray:
-    A = createAlgebraicMatrix(Coord3d, Coord2d)
+    A = createAlgebraicMatrix(Coord2d, Coord3d)
     U, S, V = np.linalg.svd(A)
     smallest_eigenvector = V[:, -1]
     P = smallest_eigenvector.reshape((3, 4))
     return P
 
 
-def createAlgebraicMatrix(worldPoints, imagePoints):
+def createAlgebraicMatrix(imagePoints, worldPoints):
     """
     Create the algebraic matrix A for camera calibration
 
-    :param worldPoints - np.ndarray, shape - (3, points) points in the world coordinate system
     :param imagePoints - np.ndarray, shape - (3, points) projections of the above points in the image
+    :param worldPoints - np.ndarray, shape - (3, points) points in the world coordinate system
     :return A - np.ndarray, shape - (2 * points, 12) the algebraic matrix used for camera calibration
     """
     assert worldPoints.shape[1] == imagePoints.shape[1]
@@ -55,7 +55,7 @@ def calculate(Coord2d: np.ndarray, Coord3d: np.ndarray) -> np.ndarray:
     """
     P = getProjectionMatrix(Coord2d, Coord3d)
     K = getIntrinsicMatrix(P)
-    return K
+    return K, P
 
 
 if __name__ == "__main__":
