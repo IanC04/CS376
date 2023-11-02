@@ -52,8 +52,9 @@
         SURF feature detectionto pick the strongest corner features for the 2D keypoints on the calibration image, and
         then snap the key points you picked onto these detected key points. The \textquoteleft snapping\textquoteright\
             procedure could be simply performing nearest neighbor search.}\newline
-        To pick 2D key points, I used the SIFT algorithm, then I used the 20 strongest features.\newline
-        Duplicates are due to different orientations of the same feature, which provide stability to the image.\newline
+        To pick 2D key points, I looked for box corners, since they're easier to calculate 3D coordinates from. I
+        spread out my 2D pixel choices to cover the entire box, and I used the SIFT feature detection to see if the
+        keypoints had strong features.\newline
         \noindent\makebox[\textwidth]{\includegraphics[width=\paperwidth]{Output Pictures/keypoints}}\newline
         % TODO: Answer
 
@@ -62,9 +63,10 @@
         located at one of the corners of the cube. Then you can count the x, y, and z coordinates of the key points.}
         \par
         \textit{Hint: You can compute the corresponding 3d points by assigning xyz axis to the checkerboard box and
-        counting the number of units for the coordinates that each of the point lies on the box’s coordinate space.
-        I used the box corner closest to the camera as the origin.}\newline
-        Answer$\ldots$\newline
+        counting the number of units for the coordinates that each of the point lies on the box’s coordinate space.}\newline
+        I used the box corner closest to the camera as the origin.\newline
+        Then, I counted the number of squares starting from the box corner in each direction to get the 3D
+        coordinates.\newline
         % TODO: Answer
 
         \item \textit{The first step is to estimate the matrix $\prod$ = [KR, KT], where K $\in$
