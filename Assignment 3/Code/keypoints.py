@@ -1,6 +1,5 @@
 import cv2
 import numpy as np
-import matplotlib.pyplot as plt
 
 calibrationImg = cv2.imread("../Assignment 3 Pics/Calibration.jpg")
 calibrationImg = cv2.cvtColor(calibrationImg, cv2.COLOR_BGR2RGB)
@@ -32,55 +31,15 @@ def get3D(img: np.ndarray) -> np.ndarray:
 
 
 def calculate(img: np.ndarray = calibrationImg) -> (np.ndarray, np.ndarray):
-    # # Convert to grayscale image
-    # sift = cv2.SIFT.create()
-    #
-    # # CV2 imread stores in BGR format, but we changed to RGB, so we need to convert to grayscale
-    # grayImg = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
-    # kp, des = sift.detectAndCompute(grayImg, None)
-    #
-    # kp = np.array(kp)
-    # des = np.array(des)
-    # kp_img = cv2.drawKeypoints(img, kp, None, color=NEON_GREEN, flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    #
-    # kp_res = np.array([k.response for k in kp])
-    # sorted_kp_indices = kp_res.argsort()
-    #
-    # kp_threshold = kp[sorted_kp_indices[-20:]]
-    # des_threshold = des[sorted_kp_indices[-20:]]
-    # kp_img_threshold = cv2.drawKeypoints(img, kp_threshold, None, color=NEON_GREEN,
-    #                                      flags=cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
-    #
-    # # Display the images
-    # manageImage(["All Keypoints", "Top 20 Keypoints"], kp_img, kp_img_threshold, display_result=False,
-    #              save_result=True, file_title="keypoints")
     """
     Calculates the 2D and 3D coordinates of the keypoints in the image
 
     :param img:
     :return:
     """
-
     two_d = get2D(img)
     three_d = get3D(img)
     return two_d, three_d
-
-
-def manageImage(titles: list, *images: np.ndarray, save_result: bool = False, display_result: bool = False, file_title:
-str = None) -> None:
-    if images is None or len(images) == 0:
-        raise ValueError("Invalid images in manageImage()")
-    # Two plots for the images
-    fx, plot = plt.subplots(1, len(images), figsize=(20, 10))
-    for index, img in enumerate(images):
-        plot[index].set_title(titles[index])
-        plot[index].imshow(img)
-
-    if save_result:
-        # Keypoints figure
-        plt.savefig(f"../Output Pictures/{file_title}.png", dpi=1200)
-    if display_result:
-        plt.show()
 
 
 if __name__ == "__main__":

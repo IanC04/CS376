@@ -9,14 +9,12 @@ CalibrationImg = cv2.cvtColor(CalibrationImg, cv2.COLOR_BGR2RGB)
 
 def checkMatrices():
     two_d, three_d = keypoints.calculate()
-    P = cameracali.getProjectionMatrix(two_d, three_d)
-    K, R, t = cameracali.decomposeProjectionMatrix(P)
+    P = cameracali.getPiMatrix(two_d, three_d)
+    K, R, t = cameracali.decomposePiMatrix(P)
     intrinsic = K
     extrinsic = np.hstack((R, t))
     while True:
-        X = int(input("X: "))
-        Y = int(input("Y: "))
-        Z = int(input("Z: "))
+        X, Y, Z = (map(int, input("(X, Y, Z): ").split()))
         imgCoord: np.ndarray = P @ np.array([X, Y, Z, 1])
         imgCoord = imgCoord / imgCoord[-1]
         print(f"({X}, {Y}, {Z}) in world coordinates is ({round(imgCoord[0])}, {round(imgCoord[1])}) in image "
@@ -36,6 +34,7 @@ def checkKP(two_d: np.ndarray, three_d: np.ndarray, img: np.ndarray = Calibratio
 
     cv2.destroyAllWindows()
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+    return img
 
 
 if __name__ == "__main__":

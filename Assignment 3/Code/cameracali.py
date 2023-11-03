@@ -3,14 +3,14 @@ import numpy as np
 import keypoints
 
 
-def getProjectionMatrix(Coord2d: np.ndarray, Coord3d: np.ndarray) -> np.ndarray:
+def getPiMatrix(Coord2d: np.ndarray, Coord3d: np.ndarray) -> np.ndarray:
     M = createAlgebraicMatrix(Coord2d, Coord3d)
     M = M.T @ M
     eigenvalues, eigenvectors = np.linalg.eig(M)
     smallest_eigenvector = eigenvectors[:, -1]
     P = smallest_eigenvector.reshape((3, 4))
     # Make sure projection matrix has determinant > 0
-    if(np.linalg.det(P[:, :3]) < 0):
+    if (np.linalg.det(P[:, :3]) < 0):
         P = -P
     return P
 
@@ -43,7 +43,7 @@ def createAlgebraicMatrix(imagePoints, worldPoints):
     return A
 
 
-def decomposeProjectionMatrix(P: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
+def decomposePiMatrix(P: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
     K = np.zeros(shape=(3, 3))
     R = np.zeros(shape=(3, 3))
     u0 = P[0, :3]
@@ -69,26 +69,19 @@ def decomposeProjectionMatrix(P: np.ndarray) -> (np.ndarray, np.ndarray, np.ndar
     return K, R, t
 
 
-def getExtrinsicMatrix(P: np.ndarray) -> np.ndarray:
-    pass
-
-
-def calculate(Coord2d: np.ndarray, Coord3d: np.ndarray) -> np.ndarray:
+def calculate() -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
     """
-    Calibrates the camera using the given 2D and 3D coordinates
+    Calibrates the camera using 2D and 3D coordinates
 
-    :param Coord2d:
-    :param Coord3d:
     :return:
     """
-    P = getProjectionMatrix(Coord2d, Coord3d)
-    K, R, t = decomposeProjectionMatrix(P)
-    return K
+    calibrationImg = cv2.imread("../Assignment 3 Pics/Calibration.jpg")
+    calibrationImg = cv2.cvtColor(calibrationImg, cv2.COLOR_BGR2RGB)
+    Coord2d, Coord3d = keypoints.calculate(calibrationImg)
+    P = getPiMatrix(Coord2d, Coord3d)
+    K, R, t = decomposePiMatrix(P)
+    return P, K, R, t
 
 
 if __name__ == "__main__":
-    calibrationImg = cv2.imread("../Assignment 3 Pics/Calibration.jpg")
-    calibrationImg = cv2.cvtColor(calibrationImg, cv2.COLOR_BGR2RGB)
-
-    two_d, three_d = keypoints.calculate(calibrationImg)
-    calculate(two_d, three_d)
+    calculate()
