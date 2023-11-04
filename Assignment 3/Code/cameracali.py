@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import keypoints
+import main
 
 
 def getPiMatrix(Coord2d: np.ndarray, Coord3d: np.ndarray) -> np.ndarray:
@@ -84,4 +85,10 @@ def calculate() -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
 
 
 if __name__ == "__main__":
-    calculate()
+    P, K, R, t = calculate()
+    main.manageMatrix(
+        ["Projection", "Intrinsic", f"Extrinsic Rotation with Determinant: {round(np.linalg.det(R), 5)}",
+         "Extrinsic Translation"],
+        [P, K, R, t],
+        save_result=True,
+        file_title="Part 1 Matrices")

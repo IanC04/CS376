@@ -56,7 +56,6 @@
         spread out my 2D pixel choices to cover the entire box, and I used the SIFT feature detection to see if the
         keypoints had strong features.\newline
         \noindent\makebox[\textwidth]{\includegraphics[width=\paperwidth]{Output Pictures/Keypoints}}\newline
-        % TODO: Answer
 
         \item \textit{Explain how you compute the corresponding 3D keypoints. To this end, it is recommended that you
         pick a 3D coordinate system, which is usually aligned with the axses of the cube box, and which the origin is
@@ -66,14 +65,13 @@
         counting the number of units for the coordinates that each of the point lies on the box’s coordinate space.}\newline
         I used the box corner closest to the camera as the origin.\newline
         Then, I counted the number of squares starting from the box corner in each direction to get the 3D
-        coordinates.\newline
-        % TODO: Answer
+        coordinates corresponding to my picked 2D pixel coordinates.\newline
 
         \item \textit{The first step is to estimate the matrix $\prod$ = [KR, KT], where K $\in$
             $\mathbb{R}^{3\times3}$ is the upright matrix that encodes intrinsic camera parameters, and R $\in$ SO(3)
             and T $\in$ $\mathbb{R}^{3}$ encode the extrinsic camera parameters. Note that you will get two matrices
-            from the smallest eigenvector computation, ou can eliminate one by enforcing that each $\lambda_i$ has to be
-            positive in the following two constraints:}
+            from the smallest eigenvector computation, you can eliminate one by enforcing that each $\lambda_i$ has
+            to be positive in the following two constraints:}
         \begin{center}
             $\lambda_i$x$_i$ = $\prod$X$_i$,
         \end{center}
@@ -88,7 +86,7 @@
         decomposition as well as other operations. For QR decomposition, please refer to
         \textquoteleft CS376Lecture15note.pdf\textquoteright\ on canvas. Compute the determinant of your estimated R.
         You should put your estimated K, R, T, and det(R) in the PDF writeup in order to earn credits.}\newline
-        Answer$\ldots$\newline
+        \includegraphics[width=\textwidth]{Output Pictures/Part 1 Matrices}\newline
         % TODO: Answer
 
         \item \textit{Test your program with different configurations of 2D and 3D key points. Compare the resulting
@@ -107,7 +105,9 @@
         \item \textbf{Extra Credit} \textit{So far we have talked about using points for image calibration. Propose a
         strategy that uses lines for calibration, i.e., correspondences between lines in the input image and 3D
         lines.}\newline
-        Answer$\ldots$\newline
+        First, we need a line detection algorithm like Hough transform or RANSAC. Then, we need to find the 2D and 3D
+        lines on the calibration rig. This is simple since the grid-like pattern is composed of exclusively straight
+        lines.
         % TODO: Answer
     \end{enumerate}
 
@@ -139,7 +139,7 @@
         matrices and the associated rotations and translations. Compute the determinant of $\overline{R}$. You should
         put $\overline{R}$, $\overline{T}$, and det($\overline{R}$) in
         the PDF writeup in order to earn credits.}\newline
-        Answer$\ldots$\newline
+        \includegraphics[width=\textwidth]{Output Pictures/Part 2 Matrices}\newline
         % TODO: Answer
 
         \item \textit{Please play with five sets of correspondences and compare the resulting relative
