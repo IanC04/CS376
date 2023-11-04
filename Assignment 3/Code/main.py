@@ -6,7 +6,9 @@ window_name = "main_window"
 
 
 def manageImage(titles: list, images: list, save_result: bool = False, display_result: bool = False,
-                file_title: str = "Default") -> None:
+                file_title: str = "Default", compute: bool = True) -> None:
+    if not compute:
+        return
     if images is None or len(images) == 0:
         raise ValueError("Invalid images in manageImage()")
     # Two plots for the images
@@ -21,7 +23,9 @@ def manageImage(titles: list, images: list, save_result: bool = False, display_r
         plt.show()
 
 def manageMatrix(titles: list, matrices: list, save_result: bool = False, display_result: bool = False,
-                file_title: str = "Default") -> None:
+                file_title: str = "Default", compute: bool = True) -> None:
+    if not compute:
+        return
     if matrices is None or len(matrices) == 0:
         raise ValueError("Invalid images in manageImage()")
     # Two plots for the images

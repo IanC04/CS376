@@ -50,6 +50,10 @@ def estimateEssentialMatrix(matrices: (np.ndarray, np.ndarray, np.ndarray, np.nd
     eigenvalues, eigenvectors = np.linalg.eig(A)
     smallest_eigenvector = eigenvectors[:, -1]
     E = smallest_eigenvector.reshape((3, 3))
+
+    # Matrix probably not essential matrix, need to project it onto the essential matrix space
+    U, S, Vt = np.linalg.svd(E)
+    E = U @ np.diag([1, 1, 0]) @ Vt
     return E
 
 
@@ -82,7 +86,7 @@ def getCorrespondences() -> (np.ndarray, np.ndarray, np.ndarray):
                                   flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS |
                                         cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     main.manageImage(["Matches-SIFT"], [img_matches], display_result=False,
-                     save_result=False, file_title="Matches-SIFT")
+                     save_result=False, file_title="Matches-SIFT", compute=False)
     return matches, ptS, ptT
 
 
@@ -100,4 +104,4 @@ if __name__ == "__main__":
         ["Essential", f"Rotation with Determinant: {round(np.linalg.det(R), 5)}", "Translation"],
         [E, R, T],
         save_result=True,
-        file_title="Part 2 Matrices")
+        file_title="Part 2 Matrices", compute=False)

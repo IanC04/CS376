@@ -122,7 +122,10 @@
         \textit{\textemdash Features that are clearly visible in both images with matching similarities around them.
         They should be spaced out and in differing depths.}
         \par
-        Answer$\ldots$\newline
+        I used the SIFT algorithm to find keypoints in both images. It used the difference of gaussians to estimate
+        the laplacian of gaussian to find blobs. Then, I used the brute force matcher to find
+        correspondences between the two images. I filtered out the correspondences that were too far away using
+        the L1 norm.
         % TODO: Answer
 
         \item \textit{Use the provided intrinsic camera parameter matrix K and the corresponding key points to solve

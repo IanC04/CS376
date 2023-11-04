@@ -91,4 +91,4 @@ if __name__ == "__main__":
          "Extrinsic Translation"],
         [P, K, R, t],
         save_result=True,
-        file_title="Part 1 Matrices")
+        file_title="Part 1 Matrices", compute=False)
