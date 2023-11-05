@@ -94,14 +94,13 @@
         intrinsic and extrinsic parameters. Answer the question where to pick key points for robust estimation of
         intrinsic and extrinsic camera parameters.}\newline
         Generally, spreading out keypoints over the surface of the box produced good results. The only way for
-        invalid results was to place all keypoints on a line, which reduced the dimensions, not allowing the
-        projection matrix to be calculated correctly with a rotation matrix with determinant 1. Additionally, too few
-        keypoints caused the projection matrix to be underdetermined, with no real eigenvalues.\newline A surprising
-        result was that making sure every face of the surface had a keypoint was crucial to the projection, as
-        without it, some faces wouldn't be mapped by the projection matrix.\newline
+        invalid results was to place all keypoints on a line or a position where we didn't have enough dimensions,
+        \item not allowing the projection matrix to be calculated correctly with a rotation matrix with determinant 1.
+        Additionally, too few keypoints caused the projection matrix to be underdetermined, with no real eigenvalues.
+        A surprising result was that making sure every face of the surface had a keypoint was crucial to the projection,
+        as without it, some faces wouldn't be mapped by the projection matrix.\newline
         \includegraphics[width=\textwidth]{Output Pictures/Configurations}\newline
         \includegraphics[width=\textwidth]{Output Pictures/Reconstructed Boxes}\newline
-        % TODO: Answer
 
         \item \textbf{Extra Credit} \textit{Suppose you have marked 20 key points, and your goal is to select 10 of
         them to estimate the camera parameters. Write a program to output the indices of these 10 keypoints. Hint:
@@ -115,8 +114,8 @@
         lines.}\newline
         First, we need a line detection algorithm like Hough transform or RANSAC. Then, we need to find the 2D and 3D
         lines on the calibration rig. This is simple since the grid-like pattern is composed of exclusively straight
-        lines.
-        % TODO: Answer
+        lines. Next, we establish correspondences between the 2D and 3D lines. Finally, we use the same method as
+        before to estimate how the lines were \textquoteleft bent\textquoteright or shifted by the projection matrix.\newline
     \end{enumerate}
 
 
@@ -130,11 +129,10 @@
         \textit{\textemdash Features that are clearly visible in both images with matching similarities around them.
         They should be spaced out and in differing depths.}
         \par
-        I used the SIFT algorithm to find keypoints in both images. It used the difference of gaussians to estimate
-        the laplacian of gaussian to find blobs. Then, I used the brute force matcher to find
+        I used the SIFT algorithm to find keypoints in both images. It used the difference of Gaussians(DoG) to estimate
+        the Laplacian of Gaussian(LoG) to find blobs. Then, I used the brute force matcher to find
         correspondences between the two images. I filtered out the correspondences that were too far away using
-        the L1 norm.
-        % TODO: Answer
+        the L1 norm. This way, I match the best features in both images.\newline
 
         \item \textit{Use the provided intrinsic camera parameter matrix K and the corresponding key points to solve
         for the essential matrix E. Note that you will have two potential solutions, where one is the negation of the
@@ -142,8 +140,6 @@
         \par
         \textit{\textemdash Done with estimation.}
         \par
-        Answer$\ldots$\newline
-        % TODO: Answer
 
         \item \textit{Extract the rotation $\overline{R}$ and the translation $\overline{T}$ from each resulting
         essential matrix E. Use the sign of the induced depth for each key point to eliminate implausible essential
@@ -151,12 +147,26 @@
         put $\overline{R}$, $\overline{T}$, and det($\overline{R}$) in
         the PDF writeup in order to earn credits.}\newline
         \includegraphics[width=\textwidth]{Output Pictures/Part 2 Matrices}\newline
-        % TODO: Answer
 
         \item \textit{Please play with five sets of correspondences and compare the resulting relative
         transformations. Discuss which set of feature correspondences lead to potentially more accurate relative pose
         estimations.}\newline
-        Answer$\ldots$\newline
+        \begin{enumerate}
+            \item \textit{Consists of well-distributed keypoints across the scene.}\newline
+            This resulted in$\ldots$\newline
+
+            \item \textit{Keypoints located mostly around edges or high-contrast areas.}\newline
+            This resulted in$\ldots$\newline
+
+            \item \textit{Keypoints situated along textured regions.}\newline
+            This resulted in$\ldots$\newline
+
+            \item \textit{Concentrated keypoints within a specific region.}\newline
+            This resulted in$\ldots$\newline
+
+            \item \textit{Keypoints located mostly around corners.}\newline
+            This resulted in$\ldots$\newline
+        \end{enumerate}
         % TODO: Answer
 
         \item \textbf{Extra Credit} \textit{Instead of using manually marked feature correspondences, please run

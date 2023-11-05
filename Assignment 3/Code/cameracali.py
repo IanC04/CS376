@@ -66,7 +66,10 @@ def decomposePiMatrix(P: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
     t = np.linalg.inv(K) @ P[:, 3].reshape((3, 1))
     K = K / K[2, 2]
     det = np.linalg.det(R)
-    assert abs(det - 1) < 0.1
+    try:
+        assert abs(det - 1) < 0.1
+    except AssertionError:
+        return None, None, None
     return K, R, t
 
 
@@ -81,6 +84,8 @@ def calculate() -> (np.ndarray, np.ndarray, np.ndarray, np.ndarray):
     Coord2d, Coord3d = keypoints.calculate(calibrationImg)
     P = getPiMatrix(Coord2d, Coord3d)
     K, R, t = decomposePiMatrix(P)
+    if K is None or R is None or t is None:
+        raise Exception("None matrix")
     return P, K, R, t
 
 

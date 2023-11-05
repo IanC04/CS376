@@ -50,6 +50,8 @@ if __name__ == "__main__":
         P = cameracali.getPiMatrix(two_d, three_d)
         Ps.append(P)
         K, R, t = cameracali.decomposePiMatrix(P)
+        if K is None or R is None or t is None:
+            raise Exception("None matrix")
         intrinsic = K
         extrinsic = np.hstack((R, t))
         print(f"Configuration {i}")
