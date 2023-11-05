@@ -12,7 +12,7 @@ targetImg = cv2.cvtColor(targetImg, cv2.COLOR_BGR2RGB)
 
 def getRelativePose(E: np.ndarray) -> (np.ndarray, np.ndarray):
     U, S, Vt = np.linalg.svd(E)
-    # TODO make sure S[0] == S[1] and S[2] == 0
+    assert abs(S[0] - S[1]) < 0.1 and abs(S[2]) < 0.1
     T = S[0] * U[:, 2]
     T = T.reshape((3, 1))
     R = np.array([-U[:, 1], U[:, 0], U[:, 2]]) @ Vt
@@ -28,7 +28,6 @@ def estimateEssentialMatrix(matrices: (np.ndarray, np.ndarray, np.ndarray, np.nd
     E = np.zeros((3, 3))
     P = matrices[0]
     K = matrices[1]
-    # TODO: fix (X, Y, Z) = K^-1 (x, y, 1)
     K_1 = np.linalg.inv(K)
     twoD_Source = np.column_stack((ptSource, np.ones(ptSource.shape[0]))).T
     twoD_Target = np.column_stack((ptTarget, np.ones(ptTarget.shape[0]))).T
