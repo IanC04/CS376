@@ -16,7 +16,7 @@ def manageImage(titles: list, images: list, save_result: bool = False, display_r
         plot[0, index].imshow(img)
 
     if legend_data is not None:
-        plt.text(0, -500, legend_data,
+        plt.text(0, -750, legend_data,
                  color="Black", bbox=dict(facecolor='none', edgecolor='black', boxstyle='round,pad=1'))
 
     if save_result:
