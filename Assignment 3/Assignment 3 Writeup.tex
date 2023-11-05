@@ -7,7 +7,7 @@
 % Packages
 \usepackage{amsmath}
 \usepackage{fancyhdr}
-\usepackage[left=2cm, right=2cm]{geometry}
+\usepackage{geometry}
 \usepackage{amsfonts}
 \usepackage{graphics}
 \usepackage{graphicx}
@@ -54,7 +54,8 @@
             procedure could be simply performing nearest neighbor search.}\newline
         To pick 2D key points, I looked for box corners, since they're easier to calculate 3D coordinates from. I
         spread out my 2D pixel choices to cover the entire box, and I used the SIFT feature detection to see if the
-        keypoints had strong features.\newline
+        keypoints had strong features.I placed my keypoints on intersections of the box grid, so I can minimize
+        errors in calculating 3D coordinates.\newline
         \noindent\makebox[\textwidth]{\includegraphics[width=\paperwidth]{Output Pictures/Keypoints}}\newline
 
         \item \textit{Explain how you compute the corresponding 3D keypoints. To this end, it is recommended that you
@@ -65,7 +66,8 @@
         counting the number of units for the coordinates that each of the point lies on the box’s coordinate space.}\newline
         I used the box corner closest to the camera as the origin.\newline
         Then, I counted the number of squares starting from the box corner in each direction to get the 3D
-        coordinates corresponding to my picked 2D pixel coordinates.\newline
+        coordinates corresponding to my picked 2D pixel coordinates. Since I placed my 2D keypoints on intersections
+        , I didn't have to worry about fractions, and just used whole numbers.\newline
 
         \item \textit{The first step is to estimate the matrix $\prod$ = [KR, KT], where K $\in$
             $\mathbb{R}^{3\times3}$ is the upright matrix that encodes intrinsic camera parameters, and R $\in$ SO(3)
@@ -87,12 +89,18 @@
         \textquoteleft CS376Lecture15note.pdf\textquoteright\ on canvas. Compute the determinant of your estimated R.
         You should put your estimated K, R, T, and det(R) in the PDF writeup in order to earn credits.}\newline
         \includegraphics[width=\textwidth]{Output Pictures/Part 1 Matrices}\newline
-        % TODO: Answer
 
         \item \textit{Test your program with different configurations of 2D and 3D key points. Compare the resulting
         intrinsic and extrinsic parameters. Answer the question where to pick key points for robust estimation of
         intrinsic and extrinsic camera parameters.}\newline
-        Answer$\ldots$\newline
+        Generally, spreading out keypoints over the surface of the box produced good results. The only way for
+        invalid results was to place all keypoints on a line, which reduced the dimensions, not allowing the
+        projection matrix to be calculated correctly with a rotation matrix with determinant 1. Additionally, too few
+        keypoints caused the projection matrix to be underdetermined, with no real eigenvalues.\newline A surprising
+        result was that making sure every face of the surface had a keypoint was crucial to the projection, as
+        without it, some faces wouldn't be mapped by the projection matrix.\newline
+        \includegraphics[width=\textwidth]{Output Pictures/Configurations}\newline
+        \includegraphics[width=\textwidth]{Output Pictures/Reconstructed Boxes}\newline
         % TODO: Answer
 
         \item \textbf{Extra Credit} \textit{Suppose you have marked 20 key points, and your goal is to select 10 of
