@@ -66,7 +66,7 @@ def decomposePiMatrix(P: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
     t = np.linalg.inv(K) @ P[:, 3].reshape((3, 1))
     K = K / K[2, 2]
     det = np.linalg.det(R)
-    assert abs(det) < 0.5
+    assert abs(det - 1) < 0.1
     return K, R, t
 
 
