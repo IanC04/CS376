@@ -21,7 +21,6 @@ if __name__ == "__main__":
         K, R, t = cameracali.decomposePiMatrix(P)
         if K is None or R is None or t is None:
             continue
-        # TODO: Test configurations and rate based on some score
         imgCoords = np.zeros((3, len(three_d[0])))
         score = 0
         for j in range(len(three_d[0])):
