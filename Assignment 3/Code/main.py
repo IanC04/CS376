@@ -41,6 +41,6 @@ def manageMatrix(titles: list, matrices: list, save_result: bool = False, displa
                                 bbox=dict(boxstyle='round', facecolor='white', edgecolor='0.3'))
 
     if save_result:
-        plt.savefig(f"../Output Pictures/{file_title}.png", dpi=1200)
+        plt.savefig(f"../Output Pictures/{file_title}.png", dpi=600)
     if display_result:
         plt.show()
