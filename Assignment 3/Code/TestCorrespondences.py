@@ -41,12 +41,12 @@ if __name__ == "__main__":
             con = ptch.ConnectionPatch(xyA=(ptS[i, 0], ptS[i, 1]), xyB=(ptT[i, 0], ptT[i, 1]), coordsA="data",
                                        coordsB="data", axesA=s, axesB=t, zorder=2, color='b')
             s.add_artist(con)
-            saveFig(True)
-            main.manageMatrix(
-                [f"{config} Essential", f"{config} Rotation with Determinant: {round(np.linalg.det(R), 5)}",
-                 f"{config} Translation"],
-                [E, R, T],
-                save_result=True,
-                file_title=f"{config} Matrices", compute=True)
+        saveFig(True)
+        main.manageMatrix(
+            [f"{config} Essential", f"{config} Rotation with Determinant: {round(np.linalg.det(R), 5)}",
+             f"{config} Translation"],
+            [E, R, T],
+            save_result=True,
+            file_title=f"{config} Matrices", compute=True)
         print(f"{config} Done")
     plt.close("all")
