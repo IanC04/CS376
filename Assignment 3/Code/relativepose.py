@@ -52,8 +52,7 @@ def estimateEssentialMatrix(matrices: (np.ndarray, np.ndarray, np.ndarray, np.nd
 
     # Matrix probably not essential matrix, need to project it onto the essential matrix space
     U, S, Vt = np.linalg.svd(E)
-    sigma = (S[0] + S[1]) / 2
-    E = U @ np.diag([sigma, sigma, 0]) @ Vt
+    E = U @ np.diag([1, 1, 0]) @ Vt
     return E
 
 
@@ -138,7 +137,6 @@ def getArgs(c: str) -> (np.ndarray, np.ndarray, np.ndarray):
 
 if __name__ == "__main__":
     E, R, T = calculate()
-    print(f"Essential matrix singular values: {np.linalg.svd(E)[1]}")
     main.manageMatrix(
         ["Essential", f"Rotation with Determinant: {round(np.linalg.det(R), 5)}", "Translation"],
         [E, R, T],

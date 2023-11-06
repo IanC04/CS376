@@ -25,7 +25,7 @@ def testCorrespondence(c: str) -> (np.ndarray, np.ndarray, np.ndarray, np.ndarra
 
 def saveFig(save: bool = True):
     if save:
-        plt.savefig(f"../Output Pictures/{config} Lines.png", dpi=600)
+        plt.savefig(f"../Output Pictures/{config} Lines.png", dpi=300)
 
 
 if __name__ == "__main__":
@@ -47,6 +47,6 @@ if __name__ == "__main__":
              f"{config} Translation"],
             [E, R, T],
             save_result=True,
-            file_title=f"{config} Matrices", compute=True)
+            file_title=f"{config} Matrices", compute=False)
         print(f"{config} Done")
     plt.close("all")
