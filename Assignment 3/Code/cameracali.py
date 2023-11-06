@@ -56,6 +56,10 @@ def decomposePiMatrix(P: np.ndarray) -> (np.ndarray, np.ndarray, np.ndarray):
 
     K[1, 2] = u1 @ R[2, :]
     K[1, 1] = np.linalg.norm(u1 - (K[1, 2] * R[2, :]))
+    try:
+        assert abs(K[1, 1]) != 0
+    except AssertionError:
+        return None, None, None
     R[1, :] = (u1 - (K[1, 2] * R[2, :])) / K[1, 1]
 
     K[0, 2] = u0 @ R[2, :]
