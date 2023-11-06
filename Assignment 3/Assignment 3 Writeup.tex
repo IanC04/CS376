@@ -106,8 +106,10 @@
         them to estimate the camera parameters. Write a program to output the indices of these 10 keypoints. Hint:
         You will need to consider a statistical model for the pixel and 3D coordinates of the feature points. Then
         you need to write out the matrix $\prod$ as a function of the perturbations of the coordinates.}\newline
-        Answer$\ldots$\newline
-        % TODO: Answer
+        In TestConfiguration.py, I used all permutation of 10 keypoints out of 26 keypoints($_{20}\mathbb{P}_{10}$).
+        I then calculated the score based on the difference between the recalculated 2D coordinates based on the
+        Projection matrix and the L2 norm, then I picked the 10 keypoints with the lowest score.\newline
+        \includegraphics[width=\textwidth]{Output Pictures/Best Configurations}\newline
 
         \item \textbf{Extra Credit} \textit{So far we have talked about using points for image calibration. Propose a
         strategy that uses lines for calibration, i.e., correspondences between lines in the input image and 3D
@@ -154,19 +156,31 @@
         \begin{enumerate}
             \item \textit{Consists of well-distributed keypoints across the scene.}\newline
             This resulted in$\ldots$\newline
+            \includegraphics[width=\textwidth]{Output Pictures/Distributed Lines}\newline
+            \includegraphics[width=\textwidth]{Output Pictures/Distributed Matrices}\newline
 
             \item \textit{Keypoints located mostly around edges or high-contrast areas.}\newline
             This resulted in$\ldots$\newline
+            \includegraphics[width=\textwidth]{Output Pictures/Edges Lines}\newline
+            \includegraphics[width=\textwidth]{Output Pictures/Edges Matrices}\newline
 
             \item \textit{Keypoints situated along textured regions.}\newline
             This resulted in$\ldots$\newline
+            \includegraphics[width=\textwidth]{Output Pictures/Textured Lines}\newline
+            \includegraphics[width=\textwidth]{Output Pictures/Textured Matrices}\newline
 
             \item \textit{Concentrated keypoints within a specific region.}\newline
             This resulted in$\ldots$\newline
+            \includegraphics[width=\textwidth]{Output Pictures/Concentrated Lines}\newline
+            \includegraphics[width=\textwidth]{Output Pictures/Concentrated Matrices}\newline
 
             \item \textit{Keypoints located mostly around corners.}\newline
             This resulted in$\ldots$\newline
+            \includegraphics[width=\textwidth]{Output Pictures/Corners Lines}\newline
+            \includegraphics[width=\textwidth]{Output Pictures/Corners Matrices}\newline
         \end{enumerate}
+        A well-distributed set across the scene often provides robust estimations due to its coverage, but real
+        -world scenarios might benefit from a specific set based on the scene characteristics.
         % TODO: Answer
 
         \item \textbf{Extra Credit} \textit{Instead of using manually marked feature correspondences, please run
@@ -174,7 +188,11 @@
         \par
         \textit{\textemdash Done and commented out of the way. Proof below}
         \par
-        Answer$\ldots$\newline
+        Since the images are relatively parallel with respect to the x-axis, I used the epipolar constraint to
+        estimate how good each correspondence was. Basically, the more horizontal a correspondence was, the better it
+        scores in my RANSAC algorithm. I used the brute force matcher to find correspondences between the two images
+        , then rated them, iteratively repeating this procedure until I found a good set of correspondences. I then
+        extracted the Essential matrix and the rotation and translation matrices from the Essential matrix.\newline
         % TODO: Answer
     \end{itemize}
 \end{document}
