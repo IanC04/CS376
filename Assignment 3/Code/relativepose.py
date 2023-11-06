@@ -86,7 +86,7 @@ def getCorrespondences() -> (np.ndarray, np.ndarray, np.ndarray):
                                   flags=cv2.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS |
                                         cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     main.manageImage(["Matches-SIFT"], [img_matches], display_result=False,
-                     save_result=False, file_title="Matches-SIFT", compute=False)
+                     save_result=True, file_title="Matches-SIFT", compute=True, dpi=600)
     return matches, ptS, ptT
 
 
