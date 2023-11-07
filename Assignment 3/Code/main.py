@@ -23,6 +23,7 @@ def manageImage(titles: list, images: list, save_result: bool = False, display_r
         plt.savefig(f"../Output Pictures/{file_title}.png", dpi=dpi)
     if display_result:
         plt.show()
+    print("Done")
 
 
 def manageMatrix(titles: list, matrices: list, save_result: bool = False, display_result: bool = False,

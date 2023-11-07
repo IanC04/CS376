@@ -55,8 +55,9 @@
         To pick 2D key points, I looked for box corners, since they're easier to calculate 3D coordinates from. I
         spread out my 2D pixel choices to cover the entire box, and I used the SIFT feature detection to see if the
         keypoints had strong features.I placed my keypoints on intersections of the box grid, so I can minimize
-        errors in calculating 3D coordinates.\newline
-        \noindent\makebox[\textwidth]{\includegraphics[width=\paperwidth]{Output Pictures/Keypoints}}\newline
+        errors in calculating 3D coordinates. I used the Microsoft Paint feature where it shows the coordinates when
+        I hover over with my mouse.\newline
+        \includegraphics[width=\textwidth]{Output Pictures/Keypoints}\newline
 
         \item \textit{Explain how you compute the corresponding 3D keypoints. To this end, it is recommended that you
         pick a 3D coordinate system, which is usually aligned with the axses of the cube box, and which the origin is
@@ -66,8 +67,8 @@
         counting the number of units for the coordinates that each of the point lies on the box’s coordinate space.}\newline
         I used the box corner closest to the camera as the origin.\newline
         Then, I counted the number of squares starting from the box corner in each direction to get the 3D
-        coordinates corresponding to my picked 2D pixel coordinates. Since I placed my 2D keypoints on intersections
-        , I didn't have to worry about fractions, and just used whole numbers.\newline
+        coordinates corresponding to my picked 2D pixel coordinates. Since I placed my 2D keypoints on
+        intersections, I didn't have to worry about fractions, and just used whole numbers.\newline
 
         \item \textit{The first step is to estimate the matrix $\prod$ = [KR, KT], where K $\in$
             $\mathbb{R}^{3\times3}$ is the upright matrix that encodes intrinsic camera parameters, and R $\in$ SO(3)
@@ -95,10 +96,14 @@
         intrinsic and extrinsic camera parameters.}\newline
         Generally, spreading out keypoints over the surface of the box produced good results. The only way for
         invalid results was to place all keypoints on a line or a position where we didn't have enough dimensions,
-        \item not allowing the projection matrix to be calculated correctly with a rotation matrix with determinant 1.
+        not allowing the projection matrix to be calculated correctly with a rotation matrix with determinant 1.
         Additionally, too few keypoints caused the projection matrix to be underdetermined, with no real eigenvalues.
         A surprising result was that making sure every face of the surface had a keypoint was crucial to the projection,
         as without it, some faces wouldn't be mapped by the projection matrix.\newline
+        The first set of images show my picked 2D keypoints and corresponding 3D keypoints. I reprojected the 3D
+        coordinates back onto the 2D image space using the projection matrix. The second set of images show the boxes
+        shape recalculated using the projection matrix. It shows interesting features, where the results differ
+        greatly depending on the 2D and 3D keypoints chosen.\newline
         \includegraphics[width=\textwidth]{Output Pictures/Configurations}\newline
         \includegraphics[width=\textwidth]{Output Pictures/Reconstructed Boxes}\newline
 
@@ -106,7 +111,7 @@
         them to estimate the camera parameters. Write a program to output the indices of these 10 keypoints. Hint:
         You will need to consider a statistical model for the pixel and 3D coordinates of the feature points. Then
         you need to write out the matrix $\prod$ as a function of the perturbations of the coordinates.}\newline
-        In TestConfiguration.py, I used all permutation of 10 keypoints out of 26 keypoints($_{20}\mathbb{P}_{10}$).
+        In TestConfiguration.py, I used all permutation of 10 keypoints out of 20 keypoints($_{20}\mathbb{P}_{10}$).
         I then calculated the score based on the difference between the recalculated 2D coordinates based on the
         Projection matrix and the L2 norm, then I picked the 10 keypoints with the lowest score.\newline
         \includegraphics[width=\textwidth]{Output Pictures/Best Configurations}\newline
@@ -116,8 +121,12 @@
         lines.}\newline
         First, we need a line detection algorithm like Hough transform or RANSAC. Then, we need to find the 2D and 3D
         lines on the calibration rig. This is simple since the grid-like pattern is composed of exclusively straight
-        lines. Next, we establish correspondences between the 2D and 3D lines. Finally, we use the same method as
-        before to estimate how the lines were \textquoteleft bent\textquoteright or shifted by the projection matrix.\newline
+        lines. Next, we establish correspondences between the 2D and 3D lines. Then, the process can be achieved
+        by determining the vanishing points or by finding intersection points of lines in the image. Finally, we use
+        the same method as before to estimate how the lines were \textquoteleft bent\textquoteright or shifted by the
+        projection matrix.\newline
+        We project the 3D object onto the 2D image space using the projection matrix, but this time using line
+        parameters as output instead of pixels.\newline
     \end{enumerate}
 
 
@@ -131,10 +140,13 @@
         \textit{\textemdash Features that are clearly visible in both images with matching similarities around them.
         They should be spaced out and in differing depths.}
         \par
-        I used the SIFT algorithm to find keypoints in both images. It used the difference of Gaussians(DoG) to estimate
+        I used the SIFT algorithm to find keypoints in both images. It uses the difference of Gaussians(DoG) to estimate
         the Laplacian of Gaussian(LoG) to find blobs. Then, I used the brute force matcher to find
         correspondences between the two images. I filtered out the correspondences that were too far away using
         the L1 norm. This way, I match the best features in both images.\newline
+        Additionally, I manually picked feature correspondences that were horizontally aligned, since the images have
+        relatively even x-axis. I used the epipolar constraint to estimate how good each correspondence was.
+        Basically, the idea was to find correspondences that were as horizontal as possible.\newline
 
         \item \textit{Use the provided intrinsic camera parameter matrix K and the corresponding key points to solve
         for the essential matrix E. Note that you will have two potential solutions, where one is the negation of the
@@ -169,26 +181,35 @@
 
             \item \textit{Keypoints situated along textured regions.}\newline
             Textured regions can provide rich information, but they might not be uniformly distributed.
-            They might excel in specific areas but might lack in others.\newline
+            They might excel in specific areas but might lack in others. They might be too similar with neighbors,
+            making it hard to locate the exact location of keypoints.\newline
             \includegraphics[width=\textwidth]{Output Pictures/Textured Lines}\newline
             \includegraphics[width=\textwidth]{Output Pictures/Textured Matrices}\newline
 
             \item \textit{Concentrated keypoints within a specific region.}\newline
             These can be significant for particular features but may not generalize well across the scene.
-            They might lead to accurate estimations in their specific areas but might lack coverage in other regions.\newline
+            They might lead to accurate estimations in their specific areas but might lack coverage in other regions
+            . This may result in skewed transformations, where the result is biased towards the small sample size.\newline
             \includegraphics[width=\textwidth]{Output Pictures/Concentrated Lines}\newline
             \includegraphics[width=\textwidth]{Output Pictures/Concentrated Matrices}\newline
 
             \item \textit{Keypoints located mostly around corners.}\newline
             The strong geometric constraints and the high information content of corners contribute to the success of
-            the calibration process.\newline
+            the calibration process. Keypoints located around corners or distinctive edges are generally more
+            reliable and invariant, making them suitable for accurate relative pose estimation. These features are
+            less likely to suffer from changes due to variations in viewpoint, lighting, or occlusion.\newline
             \includegraphics[width=\textwidth]{Output Pictures/Corners Lines}\newline
             \includegraphics[width=\textwidth]{Output Pictures/Corners Matrices}\newline
         \end{enumerate}
         A well-distributed set across the scene often provides robust estimations due to its coverage, but real
-        -world scenarios might benefit from a specific set based on the scene characteristics. A diverse set of
-        keypoints, including those located along edges, distributed uniformly, and in textured regions, can complement
-        corner keypoints and enhance the robustness of the calibration process.\newline
+        -world scenarios might benefit from a specific set based on the scene characteristics. In this case, since we
+        know the images are horizontally aligned, we can rule out keypoints that correspond with another with a large
+        y-difference. A diverse set of keypoints, including those located along edges, distributed uniformly, and in
+        textured regions, amd corner keypoints can complement and enhance the robustness of the calibration process.
+        The corners and edges are expected to perform better due to their stability and robustness across different
+        views. Concentrated correspondences might also provide accurate estimations due to a finer estimation of data.
+        Random feature points based on unsupervised algorithms and textureless regions are expected to provide
+        less accurate estimations due to their sensitivity and ambiguity.\newline
 
         \item \textbf{Extra Credit} \textit{Instead of using manually marked feature correspondences, please run
         RANSAC to extract consistent correspondences across the two input images.}
@@ -197,8 +218,14 @@
         \par
         Since the images are relatively parallel with respect to the x-axis, I used the epipolar constraint to
         estimate how good each correspondence was. Basically, the more horizontal a correspondence was, the better it
-        scores in my RANSAC algorithm. I used the brute force matcher to find correspondences between the two images
-        , then rated them, iteratively repeating this procedure until I found a good set of correspondences. I then
-        extracted the Essential matrix and the rotation and translation matrices from the Essential matrix.\newline
+        scores in my RANSAC algorithm. I used the brute force matcher to find correspondences between the two
+        images, then rated them, iteratively repeating this procedure until I found a good set of correspondences. I then
+        extracted the Essential matrix and the rotation and translation matrices from the Essential matrix. This
+        relative pose estimation is more robust as it minimizes the impact of outliers and incorrect correspondences.\newline
+        Code description: I used SIFT to get all keypoints of each image, then I used the brute force matcher to
+        match samples of 100 keypoints of each image and calculate how good they were by the epipolar constraint.
+        Then, I repeated this until I found a good set of correspondences.\newline
+        However, the repeated texture of the carpet and the wall caused many keypoints to be matched incorrectly.\newline
+        \includegraphics[width=\textwidth]{Output Pictures/RANSAC Matches}\newline
     \end{itemize}
 \end{document}
