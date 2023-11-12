@@ -7,6 +7,8 @@
 % Packages
 \usepackage{amsmath}
 \usepackage{romannum}
+\usepackage{graphics}
+\usepackage{graphicx}
 
 \title{Assignment 4 Writeup}
 \author{Ian Chen}
@@ -22,44 +24,77 @@
     \begin{enumerate}
         \item \textit{What is the relation between image classification and object detection?
         Please give two concrete examples on how they are related (e.g., one is applied to solve another)?}
+        Image classification is often a component within object detection methods, helping to classify objects
+        within localized regions. For example, a window-based object detection method may use an image classifier for
+        each windows to classify objects within the window. Another example is the Viola-Jones face detection
+        algorithm, which uses window-based object detection to detect faces, where image classifiers can be used to
+        efficiently classify faces within each window.
         % TODO: Answer
 
         \item \textit{Please compare semantic segmentation, instance segmentation and object detection.
         Describe the similarities and differences.}
+        Semantic segmentation is a deep learning algorithm that associates a label or category with every pixel in an image.
+        It is used to recognize a collection of pixels that form distinct categories.
+        Instance segmentation identifies the object instance each pixel belongs to.
+        Object detection is a computer vision technique for locating instances of objects in images or videos.
+        Instance segmentation builds on concepts in semantic segmentation by identifying object instances, however,
+        it's more involved than semantic segmentation because it requires identifying the boundaries of each object
+        and the pixels that belong to each object instance of the same categories.
+        These are similar in that they all involve identifying features and objects within an image, but they differ in
+        that semantic segmentation is used to identify categories of pixels, instance segmentation is used to
+        differentiate regions of pixels with the same label, and object detection is used to those identify instances
+        of objects.
         % TODO: Answer
 
         \item \textit{Describe at least two plausible neural network designs for the task of semantic segmentations.}
+        Fully convolutional networks (FCNs) are a type of neural network that are used for semantic segmentation. We
+        use feature maps to distinguish between different objects in an image.
+        U-net is a type of FCN, where that FCN uses the final extracted features to up-sample, while U-net uses
+        something called a shortcut connection to do that.
+        Both of these neural networks employ the use of the encoder-decoder model, where the encoder extracts features
+        while down-sampling the image, and the decoder up-samples the features to reconstruct the image.
         % TODO: Answer
 
         \item \textit{What are the applications of generative models in solving core computer vision tasks.}
+        Image synthesis, Feature/Object Detection, Image De-Noising, Image Super-Resolution.
         % TODO: Answer
 
         \item \textit{Discuss the differences between convolution neural networks and deconvolution neural networks.}
+        CNNs are foundational for extracting features and down-sampling, while deconvolutional networks are
+        instrumental in tasks that require up-sampling and the reconstruction of higher-resolution information.
+        These techniques are often combined to form more complex models capable of handling diverse tasks.
+        CNN extracts hierarchical features from the input image, while deconvolutional networks reconstruct images
+        into higher resolutions or up-sampled.
         % TODO: Answer
     \end{enumerate}
 
 
     \section{Image Classification}
 
+    Our task is to perform image classification using the CIFAR-10 dataset, which consists of 50K training images and
+    10K testing images. We will experiment with two categories of methods: non-parametric methods and parametric methods.
+    Our goal is to understand the performance of each method on this dataset. Our specific aims are:
     \begin{itemize}
         \item \textit{Compare the performance between K-Nearest Neighbor classifier and Adaptive Boosting classifier;}
-        % TODO: Answer
-
         \item \textit{Analyze the performance of these two methods when varying the size of the training set
         and the size of the testing set;}
-        % TODO: Answer
-
         \item \textit{Perform cross-validation to study the hyper-parameters of each method;}
-        % TODO: Answer
-
         \item \textit{Try different feature representations.}
-        % TODO: Answer
     \end{itemize}
 
     \begin{itemize}
         \item \textbf{Comparison.} Please compare the performance of the K-nearest neighbor classifier and the
         Adaboosting classifier. Which classes does K-nearest neighbor do better and which classes does Adaboosting do better, and
         why? How about running time?
+        For K-Nearest Neighbor classifier, the accuracy is about 33\% for small values of K. Once K becomes too
+        large, then too many different image classes would match the testing image. L1 norm had a slight advantage
+        over L2 norm, and the following 2 figures are tested with 1000 samples with no dimensional reduction.\newline
+        \includegraphics[width=\textwidth]{Output Pictures/Nearest Neighbors L1}
+        \includegraphics[width=\textwidth]{Output Pictures/Nearest Neighbors L2}
+        For Adaptive Boosting classifier, the accuracy is about.
+        % TODO: Answer
+        K Nearest Neighbors has no training time, but since comparisons to the entire training set must be made for
+        each test image, it has a very long testing time. Adaboosting has a long training time, but since it only
         % TODO: Answer
 
         \item \textbf{Cross-validation.} Perform 5-fold cross-validation for the K-nearest neighbor classifier. Report the
