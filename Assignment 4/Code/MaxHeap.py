@@ -1,3 +1,8 @@
+"""
+Deprecated, too slow and unneeded
+"""
+
+
 class MaxHeap:
     class Node:
         def __init__(self, key, value):
