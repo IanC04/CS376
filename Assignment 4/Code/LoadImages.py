@@ -31,6 +31,11 @@ def all_images() -> tuple:
     testing_data = np.array(testing_data)
     testing_labels = np.array(testing_labels)
     labels = np.array(labels[b'label_names'])
+
+    training_data = training_data.astype(np.int32)
+    training_labels = training_labels.astype(np.int32)
+    testing_data = testing_data.astype(np.int32)
+    testing_labels = testing_labels.astype(np.int32)
     return (training_data, training_labels, testing_data, testing_labels, labels)
 
 
