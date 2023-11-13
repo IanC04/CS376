@@ -1,5 +1,6 @@
 import numpy as np
 import LoadImages
+import time
 import matplotlib.pyplot as plt
 
 
@@ -20,7 +21,9 @@ def euclidean_distance(img1: np.ndarray, img2: np.ndarray) -> float:
 def classify(training_data: np.ndarray, img_data: np.ndarray) -> np.ndarray:
     # top_matches.clear()
     img = np.expand_dims(img_data, axis=0)
+    start_time = time.time()
     distances = euclidean_distance(training_data, img)
+    print(f"Time: {time.time() - start_time}")
     return np.argpartition(distances, K)[:K]
 
 
@@ -29,7 +32,9 @@ def calculate(training_data, training_labels, testing_data, testing_labels):
     incorrect = 0
     accuracies = np.zeros(len(testing_data))
     for index in range(len(testing_data)):
+
         closestK = classify(training_data, testing_data[index])
+
         est = training_labels[closestK].max()
         if est == testing_labels[index]:
             correct += 1
@@ -38,6 +43,7 @@ def calculate(training_data, training_labels, testing_data, testing_labels):
         accuracy = correct / (correct + incorrect)
         print(f"Incorrect: {incorrect}, Correct: {correct}, Accuracy: {accuracy}")
         accuracies[index] = accuracy
+
     return accuracies
 
 
