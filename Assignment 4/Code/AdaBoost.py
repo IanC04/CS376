@@ -107,6 +107,7 @@ def compute_haar_features(imgs: np.ndarray) -> np.ndarray:
             return haar_features
     else:
         integral_imgs = get_integral_images(imgs)
+        # Do I use the same subset for every image?
         haar_indices = get_haar_indices(32, 32)
 
         haar_features = np.zeros((len(integral_imgs), feature_subset), dtype=np.float64)
@@ -154,7 +155,7 @@ def classify():
 
 def train(training_data: np.ndarray, training_labels: np.ndarray, testing_data: np.ndarray, testing_labels: np.ndarray,
           labels: np.ndarray):
-    compute_haar_features(training_data)
+    haar_features = compute_haar_features(training_data)
     pass
 
 
@@ -172,5 +173,4 @@ if __name__ == "__main__":
     print("AdaBoost.py")
     training_data, training_labels, testing_data, testing_labels, labels = LoadImages.all_images()
     train(training_data, training_labels, testing_data, testing_labels, labels)
-    classifier = np.zeros((labels, 2))
     pass
