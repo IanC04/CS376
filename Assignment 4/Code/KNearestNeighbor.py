@@ -7,6 +7,7 @@ from tqdm import tqdm
 
 def euclidean_distance(img1: np.ndarray, img2: np.ndarray) -> float:
     """
+    A Hyperparameter
     Returns the Euclidean distance between two images, square root of each pixel's RGB summed up
     :param img1:
     :param img2:
@@ -18,6 +19,7 @@ def euclidean_distance(img1: np.ndarray, img2: np.ndarray) -> float:
 
 def manhattan_distance(img1: np.ndarray, img2: np.ndarray) -> float:
     """
+    A Hyperparameter
     Returns the Manhattan distance between two images, sum of each pixel's RGB
     :param img1:
     :param img2:
@@ -52,6 +54,7 @@ def calculate(training_data, training_labels, testing_data, testing_labels, prin
 
     return accuracies
 
+
 def computeKNN(current_norm):
     global norm
     norm = "L1" if current_norm == 1 else "L2"
@@ -80,7 +83,10 @@ def computeKNN(current_norm):
     # plt.show()
     plt.close()
 
+
+# A Hyperparameter
 K = 7
+
 # top_matches = MaxHeap.MaxHeap(K)
 norm = "L2"  # L1 or L2
 distance = manhattan_distance if norm == "L1" else euclidean_distance
