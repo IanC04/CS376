@@ -38,7 +38,7 @@ def calculate(training_data, training_labels, testing_data, testing_labels, prin
     correct = 0
     incorrect = 0
     accuracies = np.zeros(len(testing_data))
-    for index in tqdm(range(len(testing_data))):
+    for index in tqdm(range(len(testing_data)), desc="Testing"):
         closestK = classify(training_data, testing_data[index])
         est = training_labels[closestK].max()
         if est == testing_labels[index]:
