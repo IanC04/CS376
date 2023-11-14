@@ -1,8 +1,8 @@
 import numpy as np
 import LoadImages
-import time
 import matplotlib.pyplot as plt
 from sklearn.decomposition import PCA
+from tqdm import tqdm
 
 
 def euclidean_distance(img1: np.ndarray, img2: np.ndarray) -> float:
@@ -38,7 +38,7 @@ def calculate(training_data, training_labels, testing_data, testing_labels, prin
     correct = 0
     incorrect = 0
     accuracies = np.zeros(len(testing_data))
-    for index in range(len(testing_data)):
+    for index in tqdm(range(len(testing_data))):
         closestK = classify(training_data, testing_data[index])
         est = training_labels[closestK].max()
         if est == testing_labels[index]:
