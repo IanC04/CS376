@@ -5,7 +5,7 @@ import os
 import matplotlib.pyplot as plt
 
 
-def get_haar_features(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
+def get_haar_indices(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
     """
     Returns the Haar features of an image
     Separates the features into 2, 3, and 4 piece features
@@ -18,13 +18,13 @@ def get_haar_features(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
     two_piece = []
     three_piece = []
     four_piece = []
-    if os.path.isfile(f"{cache_dir}/haar_features.npy"):
-        with open(f"{cache_dir}/haar_features.npy", 'rb') as f:
+    if os.path.isfile(f"{cache_dir}/haar_indices.npy"):
+        with open(f"{cache_dir}/haar_indices.npy", 'rb') as f:
             two_piece = np.load(f)
             three_piece = np.load(f)
             four_piece = np.load(f)
     else:
-        for x in tqdm(range(width), desc="Getting Haar Features"):
+        for x in tqdm(range(width), desc="Getting Haar Indices"):
             for y in range(height):
                 for w in range(1, width - x):
                     for h in range(1, height - y):
@@ -55,15 +55,15 @@ def get_haar_features(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
         two_piece = np.array(two_piece)
         three_piece = np.array(three_piece)
         four_piece = np.array(four_piece)
-        with open(f"{cache_dir}/haar_features.npy", 'wb') as f:
+        with open(f"{cache_dir}/haar_indices.npy", 'wb') as f:
             np.save(f, two_piece)
             np.save(f, three_piece)
             np.save(f, four_piece)
     # Use a random subset of 2K features
     generator = np.random.default_rng()
-    partition = generator.integers(2000, size=2)
+    partition = generator.integers(feature_subset, size=2)
     partition.sort()
-    amount_each = [partition[0], partition[1] - partition[0], 2000 - partition[1]]
+    amount_each = [partition[0], partition[1] - partition[0], feature_subset - partition[1]]
     two_piece = generator.choice(two_piece, size=amount_each[0], replace=False)
     three_piece = generator.choice(three_piece, size=amount_each[1], replace=False)
     four_piece = generator.choice(four_piece, size=amount_each[2], replace=False)
@@ -95,42 +95,53 @@ def rgb2gray(rgb: np.ndarray) -> np.ndarray:
     return gray
 
 
-def compute_haar_features(imgs: np.ndarray) -> list:
+def compute_haar_features(imgs: np.ndarray) -> np.ndarray:
     """
     Computes the Haar features of the images
     :param imgs:
     :return:
     """
-    integral_imgs = get_integral_images(imgs)
-    haar_features = get_haar_features(32, 32)
+    if os.path.isfile(f"{cache_dir}/haar_features.npy"):
+        with open(f"{cache_dir}/haar_features.npy", 'rb') as f:
+            haar_features = np.load(f)
+            return haar_features
+    else:
+        integral_imgs = get_integral_images(imgs)
+        haar_indices = get_haar_indices(32, 32)
 
-    images_haar = []
-    haar_feat = None
-    for ii in tqdm(integral_imgs, desc="Computing Haar Features"):
-        for coord_type in haar_features:
-            for coord_set in coord_type:
-                # 2 Rectangles
-                if len(coord_set) == 8:
-                    rect1 = area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
-                    rect2 = area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
-                    haar_feat = rect2 - rect1
-                # 3 Rectangles
-                elif len(coord_set) == 12:
-                    rect1 = area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
-                    rect2 = area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
-                    rect3 = area(ii, coord_set[8], coord_set[9], coord_set[10], coord_set[11])
-                    haar_feat = rect2 - rect1 - rect3
-                # 4 Rectangles
-                elif len(coord_set) == 16:
-                    rect1 = area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
-                    rect2 = area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
-                    rect3 = area(ii, coord_set[8], coord_set[9], coord_set[10], coord_set[11])
-                    rect4 = area(ii, coord_set[12], coord_set[13], coord_set[14], coord_set[15])
-                    haar_feat = rect2 + rect4 - rect1 - rect3
-                else:
-                    AssertionError(f"Invalid Haar Feature: {coord_set}")
-                images_haar.append(haar_feat)
-    return haar_features
+        haar_features = np.zeros((len(integral_imgs), feature_subset), dtype=np.float64)
+        feature = None
+        img_index, haar_index = 0, 0
+        for ii in tqdm(integral_imgs, desc="Computing Haar Features"):
+            haar_index = 0
+            for coord_type in haar_indices:
+                for coord_set in coord_type:
+                    # 2 Rectangles
+                    if len(coord_set) == 8:
+                        rect1 = area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
+                        rect2 = area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
+                        feature = rect2 - rect1
+                    # 3 Rectangles
+                    elif len(coord_set) == 12:
+                        rect1 = area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
+                        rect2 = area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
+                        rect3 = area(ii, coord_set[8], coord_set[9], coord_set[10], coord_set[11])
+                        feature = rect2 - rect1 - rect3
+                    # 4 Rectangles
+                    elif len(coord_set) == 16:
+                        rect1 = area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
+                        rect2 = area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
+                        rect3 = area(ii, coord_set[8], coord_set[9], coord_set[10], coord_set[11])
+                        rect4 = area(ii, coord_set[12], coord_set[13], coord_set[14], coord_set[15])
+                        feature = rect2 + rect4 - rect1 - rect3
+                    else:
+                        AssertionError(f"Invalid Haar Feature: {coord_set}")
+                    haar_features[img_index, haar_index] = feature
+                    haar_index += 1
+            img_index += 1
+        with open(f"{cache_dir}/haar_features.npy", 'wb') as f:
+            np.save(f, haar_features)
+        return haar_features
 
 
 def area(img, y1, x1, y2, x2):
@@ -153,6 +164,7 @@ def test():
 
 classifier = None
 cache_dir = "../AdaBoostCache"
+feature_subset = 2000
 # Uses weak classifiers to classify images
 if __name__ == "__main__":
     if not os.path.isdir(f"../AdaBoostCache"):
