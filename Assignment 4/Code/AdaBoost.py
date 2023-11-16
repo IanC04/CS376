@@ -190,6 +190,10 @@ class WeakClassifier:
         self.alpha = alpha
 
 
+    def __str__(self):
+        return f"Parity: {self.parity}, Feature Index: {self.feature_index}, Threshold: {self.threshold}, Error: {self.error}, Alpha: {self.alpha}"
+
+
 def train_weak_classifier(feature_per_image: np.ndarray, f_index, binary_training_labels: np.ndarray,
                           weights: np.ndarray) -> WeakClassifier:
     """
@@ -205,7 +209,7 @@ def train_weak_classifier(feature_per_image: np.ndarray, f_index, binary_trainin
     min_threshold, max_threshold = np.min(feature_per_image), np.max(feature_per_image)
     threshold_range = max_threshold - min_threshold
 
-    MAX_ITER = 100
+    MAX_ITER = 50
     for i in range(MAX_ITER):
         # Find the best threshold
         parity = 1
@@ -275,11 +279,11 @@ def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.nda
     # TODO Check if trained
     if TRAINED and os.path.isfile(f"{CACHE_DIR}/binary_classifiers.npy"):
         with open(f"{CACHE_DIR}/binary_classifiers.npy", 'rb') as f:
-            binary_classifiers = np.load(f)
+            binary_classifiers = np.load(f, allow_pickle=True)
             print("Loaded Binary Classifiers from Cache")
             return binary_classifiers
     else:
-        T = np.uint16(1000)
+        T = np.uint16(100)
         assert T < FEATURE_SUBSET, f"T must be less than the feature subset size of {FEATURE_SUBSET}"
         haar_features = compute_haar_features(training_data)
         # Rows of classifiers are strong classifiers
@@ -304,16 +308,17 @@ def test(testing_data: np.ndarray, testing_labels: np.ndarray):
     binary_classifiers = None
     if os.path.isfile(f"{CACHE_DIR}/binary_classifiers.npy"):
         with open(f"{CACHE_DIR}/binary_classifiers.npy", 'rb') as f:
-            binary_classifiers = np.load(f)
+            binary_classifiers = np.load(f, allow_pickle=True)
             print("Loaded Binary Classifiers from Cache")
     else:
-        raise FileNotFoundError("Binary Classifiers not found")
+        raise FileNotFoundError("Binary Classifiers not found in cache")
+    haar_features = compute_haar_features(testing_data, testing=True)
     pass
 
 
 CACHE_DIR = "../AdaBoostCache"
 FEATURE_SUBSET = 2000
-TRAINED = False
+TRAINED = True
 # Uses weak classifiers to classify images
 
 if __name__ == "__main__":
@@ -322,6 +327,6 @@ if __name__ == "__main__":
     print("AdaBoost.py")
     tr_d, tr_l, te_d, te_l, label_names = LoadImages.all_images()
     if not TRAINED:
-        train(tr_d, tr_l, label_names)
+        binary_classifiers = train(tr_d, tr_l, label_names)
     test(te_d, te_l)
     pass
