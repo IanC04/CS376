@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 def get_haar_indices(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
     """
     Returns the Haar features of an image
-    Separates the features into 2, 3, and 4 piece features
-    Uses a subset of 2K per assignment guidelines
+    Separates the features into two, three, and four piece features
+    Use a subset of 2K per assignment guidelines
     Format is pairs of (y, x) = (Top Left Corner, Bottom Right Corner)
     :param width:
     :param height:
@@ -81,7 +81,7 @@ def get_haar_indices(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
             np.save(f, three_piece)
             np.save(f, four_piece)
             print("Saved Haar Indices Subset to Cache")
-    return (two_piece, three_piece, four_piece)
+    return two_piece, three_piece, four_piece
 
 
 def get_integral_images(imgs: np.ndarray) -> np.ndarray:
@@ -163,6 +163,15 @@ def compute_haar_features(imgs: np.ndarray, testing: bool = False) -> np.ndarray
 
 
 def area(img, y1, x1, y2, x2):
+    """
+    Returns the area of a rectangle with the given coordinates of the top left: (y1, x1) and bottom right: (y2, x2)
+    :param img:
+    :param y1:
+    :param x1:
+    :param y2:
+    :param x2:
+    :return:
+    """
     return (img[y2][x2] + img[y1][x1]) - (img[y1][x2] + img[y2][x1])
 
 
@@ -181,18 +190,19 @@ class WeakClassifier:
         self.alpha = alpha
 
 
-def train_weak_classifier(feature: np.ndarray, f_index, binary_training_labels: np.ndarray,
+def train_weak_classifier(feature_per_image: np.ndarray, f_index, binary_training_labels: np.ndarray,
                           weights: np.ndarray) -> WeakClassifier:
     """
     Trains a weak classifier
-    :param feature: The feature to train on, includes all images
+    :param feature_per_image: The feature to train on, includes all images
+    :param f_index: The feature to train on, includes all images
     :param binary_training_labels:
     :param weights:
     :return:
     """
 
     weak_classifier = WeakClassifier(feature_index=f_index)
-    min_threshold, max_threshold = np.min(feature), np.max(feature)
+    min_threshold, max_threshold = np.min(feature_per_image), np.max(feature_per_image)
     threshold_range = max_threshold - min_threshold
 
     MAX_ITER = 100
@@ -201,7 +211,7 @@ def train_weak_classifier(feature: np.ndarray, f_index, binary_training_labels: 
         parity = 1
         threshold = (i / MAX_ITER) * threshold_range + min_threshold
         predictions = np.ones(len(binary_training_labels))
-        predictions[feature < threshold] = 0
+        predictions[feature_per_image < threshold] = 0
         error = np.sum(weights[binary_training_labels != predictions])
         if error > 0.5:
             error = 1 - error
@@ -222,6 +232,7 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
     m = number of negative examples
     :param haar_features:
     :param binary_training_labels:
+    :param T: Number of weak classifiers and "time" steps
     :return:
     """
     l = np.count_nonzero(binary_training_labels)
@@ -262,8 +273,7 @@ def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.nda
     :return:
     """
     # TODO Check if trained
-    trained = False
-    if trained and os.path.isfile(f"{CACHE_DIR}/binary_classifiers.npy"):
+    if TRAINED and os.path.isfile(f"{CACHE_DIR}/binary_classifiers.npy"):
         with open(f"{CACHE_DIR}/binary_classifiers.npy", 'rb') as f:
             binary_classifiers = np.load(f)
             print("Loaded Binary Classifiers from Cache")
@@ -291,17 +301,27 @@ def test_classify():
 
 def test(testing_data: np.ndarray, testing_labels: np.ndarray):
     haar_features = compute_haar_features(testing_data, True)
+    binary_classifiers = None
+    if os.path.isfile(f"{CACHE_DIR}/binary_classifiers.npy"):
+        with open(f"{CACHE_DIR}/binary_classifiers.npy", 'rb') as f:
+            binary_classifiers = np.load(f)
+            print("Loaded Binary Classifiers from Cache")
+    else:
+        raise FileNotFoundError("Binary Classifiers not found")
     pass
 
 
 CACHE_DIR = "../AdaBoostCache"
 FEATURE_SUBSET = 2000
+TRAINED = False
 # Uses weak classifiers to classify images
 
 if __name__ == "__main__":
     if not os.path.isdir(f"../AdaBoostCache"):
         os.mkdir(f"../AdaBoostCache")
     print("AdaBoost.py")
-    training_data, training_labels, testing_data, testing_labels, labels = LoadImages.all_images()
-    train(training_data, training_labels, labels)
+    tr_d, tr_l, te_d, te_l, label_names = LoadImages.all_images()
+    if not TRAINED:
+        train(tr_d, tr_l, label_names)
+    test(te_d, te_l)
     pass
