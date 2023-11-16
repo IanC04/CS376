@@ -18,8 +18,8 @@ def get_haar_indices(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
     two_piece = []
     three_piece = []
     four_piece = []
-    if os.path.isfile(f"{cache_dir}/haar_indices.npy"):
-        with open(f"{cache_dir}/haar_indices.npy", 'rb') as f:
+    if os.path.isfile(f"{CACHE_DIR}/haar_indices.npy"):
+        with open(f"{CACHE_DIR}/haar_indices.npy", 'rb') as f:
             two_piece = np.load(f)
             three_piece = np.load(f)
             four_piece = np.load(f)
@@ -56,27 +56,27 @@ def get_haar_indices(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
         two_piece = np.array(two_piece)
         three_piece = np.array(three_piece)
         four_piece = np.array(four_piece)
-        with open(f"{cache_dir}/haar_indices.npy", 'wb') as f:
+        with open(f"{CACHE_DIR}/haar_indices.npy", 'wb') as f:
             np.save(f, two_piece)
             np.save(f, three_piece)
             np.save(f, four_piece)
             print("Saved Haar Indices to Cache")
     # Use a random subset of 2K features
-    if os.path.isfile(f"{cache_dir}/haar_indices_subset.npy"):
-        with open(f"{cache_dir}/haar_indices_subset.npy", 'rb') as f:
+    if os.path.isfile(f"{CACHE_DIR}/haar_indices_subset.npy"):
+        with open(f"{CACHE_DIR}/haar_indices_subset.npy", 'rb') as f:
             two_piece = np.load(f)
             three_piece = np.load(f)
             four_piece = np.load(f)
             print("Loaded Haar Indices Subset from Cache")
     else:
         generator = np.random.default_rng()
-        partition = generator.integers(feature_subset, size=2)
+        partition = generator.integers(FEATURE_SUBSET, size=2)
         partition.sort()
-        amount_each = [partition[0], partition[1] - partition[0], feature_subset - partition[1]]
+        amount_each = [partition[0], partition[1] - partition[0], FEATURE_SUBSET - partition[1]]
         two_piece = generator.choice(two_piece, size=amount_each[0], replace=False)
         three_piece = generator.choice(three_piece, size=amount_each[1], replace=False)
         four_piece = generator.choice(four_piece, size=amount_each[2], replace=False)
-        with open(f"{cache_dir}/haar_indices_subset.npy", 'wb') as f:
+        with open(f"{CACHE_DIR}/haar_indices_subset.npy", 'wb') as f:
             np.save(f, two_piece)
             np.save(f, three_piece)
             np.save(f, four_piece)
@@ -115,8 +115,8 @@ def compute_haar_features(imgs: np.ndarray, testing: bool = False) -> np.ndarray
     :param imgs:
     :return:
     """
-    if not testing and os.path.isfile(f"{cache_dir}/haar_features.npy"):
-        with open(f"{cache_dir}/haar_features.npy", 'rb') as f:
+    if not testing and os.path.isfile(f"{CACHE_DIR}/haar_features.npy"):
+        with open(f"{CACHE_DIR}/haar_features.npy", 'rb') as f:
             haar_features = np.load(f)
             print("Loaded Haar Features from Cache")
             return haar_features
@@ -125,7 +125,7 @@ def compute_haar_features(imgs: np.ndarray, testing: bool = False) -> np.ndarray
         # Do I use the same subset for every image?
         haar_indices = get_haar_indices(32, 32)
 
-        haar_features = np.zeros((len(integral_imgs), feature_subset), dtype=np.float64)
+        haar_features = np.zeros((len(integral_imgs), FEATURE_SUBSET), dtype=np.float64)
         feature = None
         img_index, haar_index = 0, 0
         for ii in tqdm(integral_imgs, desc=f"Computing Haar Features of {"Testing" if testing else "Training"} set"):
@@ -156,7 +156,7 @@ def compute_haar_features(imgs: np.ndarray, testing: bool = False) -> np.ndarray
                     haar_index += 1
             img_index += 1
         if not testing:
-            with open(f"{cache_dir}/haar_features.npy", 'wb') as f:
+            with open(f"{CACHE_DIR}/haar_features.npy", 'wb') as f:
                 np.save(f, haar_features)
                 print("Saved Haar Features to Cache")
         return haar_features
@@ -215,7 +215,7 @@ def train_weak_classifier(feature: np.ndarray, f_index, binary_training_labels: 
     return weak_classifier
 
 
-def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: np.ndarray) -> np.ndarray:
+def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: np.ndarray, T: np.uint16) -> np.ndarray:
     """
     Trains a binary classifier
     l = number of positive examples
@@ -226,12 +226,11 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
     """
     l = np.count_nonzero(binary_training_labels)
     m = len(binary_training_labels) - l
-    T = 1000
 
     weights = np.array([1 / (2 * l) if label == 1 else 1 / (2 * m) for label in binary_training_labels])
     strong_classifier = []
 
-    for t in tqdm(range(T), desc="Training Binary Classifier", leave=False):
+    for _ in tqdm(range(T), desc="Training Binary Classifier", leave=False):
         # Normalize the weights
         weights /= np.sum(weights)
 
@@ -263,21 +262,24 @@ def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.nda
     :return:
     """
     # TODO Check if trained
-    if os.path.isfile(f"{cache_dir}/binary_classifiers.npy"):
-        with open(f"{cache_dir}/binary_classifiers.npy", 'rb') as f:
+    trained = False
+    if trained and os.path.isfile(f"{CACHE_DIR}/binary_classifiers.npy"):
+        with open(f"{CACHE_DIR}/binary_classifiers.npy", 'rb') as f:
             binary_classifiers = np.load(f)
             print("Loaded Binary Classifiers from Cache")
             return binary_classifiers
     else:
+        T = np.uint16(1000)
+        assert T < FEATURE_SUBSET, f"T must be less than the feature subset size of {FEATURE_SUBSET}"
         haar_features = compute_haar_features(training_data)
         # Rows of classifiers are strong classifiers
-        binary_classifiers = np.ndarray((len(labels), feature_subset), dtype=WeakClassifier)
+        binary_classifiers = np.ndarray((len(labels), T), dtype=WeakClassifier)
         for index, l in tqdm(enumerate(labels), desc="Training Binary Classifiers"):
             print(f"\nTraining {l}")
             binary_training_labels = np.where(training_labels == index, 1, 0)
-            strong_classifier = train_binary_classifier(haar_features, binary_training_labels)
+            strong_classifier = train_binary_classifier(haar_features, binary_training_labels, T)
             binary_classifiers[index, :] = strong_classifier
-        with open(f"{cache_dir}/binary_classifiers.npy", 'wb') as f:
+        with open(f"{CACHE_DIR}/binary_classifiers.npy", 'wb') as f:
             np.save(f, binary_classifiers)
             print("Saved Binary Classifiers to Cache")
     return binary_classifiers
@@ -292,11 +294,9 @@ def test(testing_data: np.ndarray, testing_labels: np.ndarray):
     pass
 
 
-classifier = None
-cache_dir = "../AdaBoostCache"
-feature_subset = 2000
+CACHE_DIR = "../AdaBoostCache"
+FEATURE_SUBSET = 2000
 # Uses weak classifiers to classify images
-
 
 if __name__ == "__main__":
     if not os.path.isdir(f"../AdaBoostCache"):
