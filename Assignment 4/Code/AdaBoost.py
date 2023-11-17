@@ -215,15 +215,15 @@ def train_weak_classifier(weak_classifier: WeakClassifier, feature_per_image: np
     :return:
     """
 
-    possible_thresholds = np.unique(feature_per_image)
-    translation = np.min(possible_thresholds)
-    scale = np.max(possible_thresholds - translation)
+    all_thresholds = np.unique(feature_per_image)
+    translation = np.min(all_thresholds)
+    scale = np.max(all_thresholds - translation)
 
-    MAX_ITER = 5
-    for i in range(MAX_ITER):
+    SCALE_FACTOR = 10
+    for i in range(SCALE_FACTOR):
         # Find the best threshold
         parity = 1
-        threshold = (i / MAX_ITER) * scale + translation
+        threshold = (i / SCALE_FACTOR) * scale + translation
         predictions = np.zeros(len(binary_training_labels))
         predictions[feature_per_image >= threshold] = 1
         error = np.sum(weights[binary_training_labels != predictions])
@@ -262,16 +262,16 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
         weak_classifier = WeakClassifier()
         for feature_index in range(haar_features.shape[1]):
             single_feature = haar_features[:, feature_index]
-            if np.all(single_feature == single_feature[0]):
+            if np.unique(single_feature).size < (l + m) / 10:
                 continue
             train_weak_classifier(weak_classifier, single_feature, feature_index,
                                   binary_training_labels, weights)
         beta = weak_classifier.error / (1 - weak_classifier.error)
-        weak_classifier.alpha = np.log(1 / beta)
+        weak_classifier.alpha = np.log((1 / beta))
 
         strong_classifier.append(weak_classifier)
         predictions = np.zeros(len(binary_training_labels), dtype=np.uint8)
-        predictions[weak_classifier.parity * haar_features[:, weak_classifier.feature_index] <
+        predictions[weak_classifier.parity * haar_features[:, weak_classifier.feature_index] >=
                     weak_classifier.parity * weak_classifier.threshold] = 1
         print(weak_classifier.error)
 
@@ -286,7 +286,7 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
 
 
 def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.ndarray, number_of_weak_classifiers: int =
-10):
+50):
     """
     Trains the AdaBoost classifier
     :param training_data:
@@ -356,7 +356,7 @@ def classify_image(features: np.ndarray, binary_classifiers: np.ndarray, correct
     assert sum_alpha is not np.nan, "Sum Alpha is NaN"
     assert sum_alpha is not np.inf, "Sum Alpha is Inf"
     prediction = np.argmax(scores)
-    print(f"Alpha_H: {sum_alpha_h} | Alpha: {sum_alpha}")
+    # print(f"Alpha_H: {sum_alpha_h} | Alpha: {sum_alpha}")
     return prediction
 
 
