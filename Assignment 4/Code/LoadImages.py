@@ -36,6 +36,8 @@ def all_images() -> tuple:
     training_labels = training_labels.astype(np.int32)
     testing_data = testing_data.astype(np.int32)
     testing_labels = testing_labels.astype(np.int32)
+
+    labels = np.array(["airplane", "automobile", "bird", "cat", "deer", "dog", "frog", "horse", "ship", "truck"])
     return (training_data, training_labels, testing_data, testing_labels, labels)
 
 
