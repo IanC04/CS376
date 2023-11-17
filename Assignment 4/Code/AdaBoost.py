@@ -2,14 +2,14 @@ import LoadImages
 import numpy as np
 from tqdm import tqdm
 import os
-import matplotlib.pyplot as plt
+import multiprocessing as mp
 
 
 def get_haar_indices(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
     """
     Returns the Haar features of an image
     Separates the features into two, three, and four piece features
-    Use a subset of 2K per assignment guidelines
+    Use a subset of 2K per assignment guidelines for training
     Format is pairs of (y, x) = (Top Left Corner, Bottom Right Corner)
     :param width:
     :param height:
@@ -120,6 +120,11 @@ def compute_haar_features(imgs: np.ndarray, testing: bool = False) -> np.ndarray
             haar_features = np.load(f)
             print("Loaded Haar Features from Cache")
             return haar_features
+    elif testing and os.path.isfile(f"{CACHE_DIR}/haar_features_test.npy"):
+        with open(f"{CACHE_DIR}/haar_features_test.npy", 'rb') as f:
+            haar_features = np.load(f)
+            print("Loaded Haar Features Testing from Cache")
+            return haar_features
     else:
         integral_imgs = get_integral_images(imgs)
         # Do I use the same subset for every image?
@@ -155,7 +160,11 @@ def compute_haar_features(imgs: np.ndarray, testing: bool = False) -> np.ndarray
                     haar_features[img_index, haar_index] = feature
                     haar_index += 1
             img_index += 1
-        if not testing:
+        if testing:
+            with open(f"{CACHE_DIR}/haar_features_test.npy", 'wb') as f:
+                np.save(f, haar_features)
+                print("Saved Haar Features Test to Cache")
+        else:
             with open(f"{CACHE_DIR}/haar_features.npy", 'wb') as f:
                 np.save(f, haar_features)
                 print("Saved Haar Features to Cache")
@@ -189,9 +198,9 @@ class WeakClassifier:
         self.error = error
         self.alpha = alpha
 
-
     def __str__(self):
-        return f"Parity: {self.parity}, Feature Index: {self.feature_index}, Threshold: {self.threshold}, Error: {self.error}, Alpha: {self.alpha}"
+        return (f"Parity: {self.parity}, Feature Index: {self.feature_index}, Threshold: {self.threshold}, "
+                f"Error: {self.error}, Alpha: {self.alpha}")
 
 
 def train_weak_classifier(feature_per_image: np.ndarray, f_index, binary_training_labels: np.ndarray,
@@ -209,7 +218,7 @@ def train_weak_classifier(feature_per_image: np.ndarray, f_index, binary_trainin
     min_threshold, max_threshold = np.min(feature_per_image), np.max(feature_per_image)
     threshold_range = max_threshold - min_threshold
 
-    MAX_ITER = 50
+    MAX_ITER = 10
     for i in range(MAX_ITER):
         # Find the best threshold
         parity = 1
@@ -229,7 +238,8 @@ def train_weak_classifier(feature_per_image: np.ndarray, f_index, binary_trainin
     return weak_classifier
 
 
-def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: np.ndarray, T: np.uint16) -> np.ndarray:
+def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: np.ndarray, T: np.uint16,
+                            queue: mp.Queue = None, index: int = None) -> np.ndarray:
     """
     Trains a binary classifier
     l = number of positive examples
@@ -245,13 +255,13 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
     weights = np.array([1 / (2 * l) if label == 1 else 1 / (2 * m) for label in binary_training_labels])
     strong_classifier = []
 
-    for _ in tqdm(range(T), desc="Training Binary Classifier", leave=False):
+    for _ in tqdm(range(T), desc=f"Training Binary Classifier: {index}"):
         # Normalize the weights
         weights /= np.sum(weights)
 
         min_error = np.inf
         best_weak_classifier = None
-        for feature_index in tqdm(range(haar_features.shape[1]), desc="Training Weak Classifier", leave=False):
+        for feature_index in range(haar_features.shape[1]):
             weak_classifier = train_weak_classifier(haar_features[:, feature_index], feature_index,
                                                     binary_training_labels, weights)
             if weak_classifier.error < min_error:
@@ -265,10 +275,14 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
         predictions[best_weak_classifier.parity * haar_features[:, best_weak_classifier.feature_index] <
                     best_weak_classifier.parity * best_weak_classifier.threshold] = 0
         weights *= np.power(beta, 1 - predictions)
-    return np.array(strong_classifier)
+
+    strong_classifier = np.array(strong_classifier)
+    queue.put((index, strong_classifier))
+    return strong_classifier
 
 
-def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.ndarray):
+def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.ndarray, number_of_weak_classifiers: int =
+10):
     """
     Trains the AdaBoost classifier
     :param training_data:
@@ -276,44 +290,94 @@ def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.nda
     :param labels:
     :return:
     """
-    # TODO Check if trained
+    # Check if trained
     if TRAINED and os.path.isfile(f"{CACHE_DIR}/binary_classifiers.npy"):
         with open(f"{CACHE_DIR}/binary_classifiers.npy", 'rb') as f:
             binary_classifiers = np.load(f, allow_pickle=True)
             print("Loaded Binary Classifiers from Cache")
             return binary_classifiers
     else:
-        T = np.uint16(100)
+        T = np.uint16(number_of_weak_classifiers)
         assert T < FEATURE_SUBSET, f"T must be less than the feature subset size of {FEATURE_SUBSET}"
         haar_features = compute_haar_features(training_data)
         # Rows of classifiers are strong classifiers
         binary_classifiers = np.ndarray((len(labels), T), dtype=WeakClassifier)
-        for index, l in tqdm(enumerate(labels), desc="Training Binary Classifiers"):
+
+        queue = mp.Queue()
+        processes = []
+        for index, l in enumerate(labels):
             print(f"\nTraining {l}")
             binary_training_labels = np.where(training_labels == index, 1, 0)
-            strong_classifier = train_binary_classifier(haar_features, binary_training_labels, T)
-            binary_classifiers[index, :] = strong_classifier
+            processes.append(mp.Process(target=train_binary_classifier, args=(haar_features, binary_training_labels,
+                                                                              T, queue, index)))
+            # strong_classifier = train_binary_classifier(haar_features, binary_training_labels, T)
+            # binary_classifiers[index, :] = strong_classifier
+
+        in_progress = len(processes)
+        for p in processes:
+            print(f"Starting Process {in_progress}")
+            p.start()
+            in_progress -= 1
+        results = [queue.get() for p in processes]
+        for p in processes:
+            p.join()
+            print(f"Process {in_progress} Complete")
+            in_progress += 1
+        results.sort(key=lambda x: x[0])
+        results = [result[1] for result in results]
+        for index, result in enumerate(results):
+            binary_classifiers[index, :] = result
         with open(f"{CACHE_DIR}/binary_classifiers.npy", 'wb') as f:
             np.save(f, binary_classifiers)
             print("Saved Binary Classifiers to Cache")
     return binary_classifiers
 
 
-def test_classify():
-    pass
+def classify_image(features: np.ndarray, binary_classifiers: np.ndarray, correct_label) -> np.int8:
+    binary_predictions = np.zeros(len(binary_classifiers))
+    scores = np.zeros(len(binary_classifiers))
+    for index, strong_classifier in enumerate(binary_classifiers):
+        sum_alpha_h = 0
+        sum_alpha = 0
+        for weak_classifier in strong_classifier:
+            if features[weak_classifier.feature_index] >= weak_classifier.threshold:
+                sum_alpha_h += weak_classifier.alpha
+            sum_alpha += weak_classifier.alpha
+            if sum_alpha_h > .5 * sum_alpha:
+                binary_predictions[index] = 1
+                scores[index] = sum_alpha_h / sum_alpha
+    prediction = np.argmax(scores)
+    # if prediction != correct_label:
+    #     print(f"Incorrect Prediction: {prediction}, Correct Label: {correct_label}")
+    # else:
+    #     print(f"Correct Prediction: {prediction}")
+    return prediction
 
 
 def test(testing_data: np.ndarray, testing_labels: np.ndarray):
-    haar_features = compute_haar_features(testing_data, True)
-    binary_classifiers = None
     if os.path.isfile(f"{CACHE_DIR}/binary_classifiers.npy"):
         with open(f"{CACHE_DIR}/binary_classifiers.npy", 'rb') as f:
-            binary_classifiers = np.load(f, allow_pickle=True)
+            all_classifiers = np.load(f, allow_pickle=True)
             print("Loaded Binary Classifiers from Cache")
     else:
         raise FileNotFoundError("Binary Classifiers not found in cache")
     haar_features = compute_haar_features(testing_data, testing=True)
-    pass
+    predictions = np.zeros(len(testing_labels), dtype=np.uint8)
+    for img in range(testing_data.shape[0]):
+        predictions[img] = classify_image(haar_features[img, :], all_classifiers, testing_labels[img])
+    accuracy = np.sum(predictions == testing_labels) / len(testing_labels)
+    print(f"Accuracy: {accuracy}")
+    return accuracy, predictions, testing_labels
+
+
+def train_and_test(t, training_data: np.ndarray, training_labels: np.ndarray, testing_data: np.ndarray,
+                   testing_labels: np.ndarray, label_names: np.ndarray):
+    global TRAINED
+    TRAINED = False
+    train(training_data, training_labels, label_names, t)
+    accuracy, predictions, testing_labels = test(testing_data, testing_labels)
+    TRAINED = True
+    return accuracy
 
 
 CACHE_DIR = "../AdaBoostCache"
@@ -322,11 +386,13 @@ TRAINED = True
 # Uses weak classifiers to classify images
 
 if __name__ == "__main__":
-    if not os.path.isdir(f"../AdaBoostCache"):
-        os.mkdir(f"../AdaBoostCache")
+    if not os.path.isdir(f"{CACHE_DIR}"):
+        os.mkdir(f"{CACHE_DIR}")
     print("AdaBoost.py")
     tr_d, tr_l, te_d, te_l, label_names = LoadImages.all_images()
-    if not TRAINED:
-        binary_classifiers = train(tr_d, tr_l, label_names)
-    test(te_d, te_l)
-    pass
+    # if not TRAINED:
+    #     binary_classifiers = train(tr_d, tr_l, label_names)
+    # test(te_d, te_l)
+    # import CrossValidation
+    # CrossValidation.confusion_matrix_adaboost(tr_d, tr_l, te_d, te_l, label_names)
+    # del CrossValidation

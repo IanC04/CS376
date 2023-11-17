@@ -29,11 +29,11 @@
         each windows to classify objects within the window. Another example is the Viola-Jones face detection
         algorithm, which uses window-based object detection to detect faces, where image classifiers can be used to
         efficiently classify faces within each window.
-        % TODO: Answer
 
         \item \textit{Please compare semantic segmentation, instance segmentation and object detection.
         Describe the similarities and differences.}
-        Semantic segmentation is a deep learning algorithm that associates a label or category with every pixel in an image.
+        Semantic segmentation is a deep learning algorithm that associates a label or category with every pixel in an
+        image.
         It is used to recognize a collection of pixels that form distinct categories.
         Instance segmentation identifies the object instance each pixel belongs to.
         Object detection is a computer vision technique for locating instances of objects in images or videos.
@@ -44,35 +44,32 @@
         that semantic segmentation is used to identify categories of pixels, instance segmentation is used to
         differentiate regions of pixels with the same label, and object detection is used to those identify instances
         of objects.
-        % TODO: Answer
 
         \item \textit{Describe at least two plausible neural network designs for the task of semantic segmentations.}
-        Fully convolutional networks (FCNs) are a type of neural network that are used for semantic segmentation. We
+        Fully convolutional networks (FCNs) are a type of neural network that is used for semantic segmentation. We
         use feature maps to distinguish between different objects in an image.
         U-net is a type of FCN, where that FCN uses the final extracted features to up-sample, while U-net uses
         something called a shortcut connection to do that.
         Both of these neural networks employ the use of the encoder-decoder model, where the encoder extracts features
         while down-sampling the image, and the decoder up-samples the features to reconstruct the image.
-        % TODO: Answer
 
         \item \textit{What are the applications of generative models in solving core computer vision tasks.}
         Image synthesis, Feature/Object Detection, Image De-Noising, Image Super-Resolution.
-        % TODO: Answer
 
         \item \textit{Discuss the differences between convolution neural networks and deconvolution neural networks.}
         CNNs are foundational for extracting features and down-sampling, while deconvolutional networks are
-        instrumental in tasks that require up-sampling and the reconstruction of higher-resolution information.
+        important in tasks that require up-sampling and the reconstruction of higher-resolution information.
         These techniques are often combined to form more complex models capable of handling diverse tasks.
         CNN extracts hierarchical features from the input image, while deconvolutional networks reconstruct images
         into higher resolutions or up-sampled.
-        % TODO: Answer
     \end{enumerate}
 
 
     \section{Image Classification}
 
     Our task is to perform image classification using the CIFAR-10 dataset, which consists of 50K training images and
-    10K testing images. We will experiment with two categories of methods: non-parametric methods and parametric methods.
+    10K testing images. We will experiment with two categories of methods: non-parametric methods and parametric
+    methods.
     Our goal is to understand the performance of each method on this dataset. Our specific aims are:
     \begin{itemize}
         \item \textit{Compare the performance between K-Nearest Neighbor classifier and Adaptive Boosting classifier;}
@@ -84,27 +81,36 @@
 
     \begin{itemize}
         \item \textbf{Comparison.} Please compare the performance of the K-nearest neighbor classifier and the
-        Adaboosting classifier. Which classes does K-nearest neighbor do better and which classes does Adaboosting do better, and
+        Adaboosting classifier. Which classes does K-nearest neighbor do better and which classes does Adaboosting do
+        better, and
         why? How about running time?
         For K-Nearest Neighbor classifier, the accuracy is about 33\% for small values of K. Once K becomes too
         large, then too many different image classes would match the testing image. L1 norm had a slight advantage
         over L2 norm, and the following 2 figures are tested with 1000 samples with no dimensional reduction.\newline
         \includegraphics[width=\textwidth]{Output Pictures/Nearest Neighbors L1}
         \includegraphics[width=\textwidth]{Output Pictures/Nearest Neighbors L2}
-        For Adaptive Boosting classifier, the accuracy is about.
-        % TODO: Answer
+        For Adaptive Boosting classifier, the accuracy is about 11\%. This is because it's very biased towards the
+        third label, the cat. The training time is very long, but the testing time is very fast.
+        % TODO: Fix Adaboost accuracy
         K Nearest Neighbors has no training time, but since comparisons to the entire training set must be made for
         each test image, it has a very long testing time. Adaboosting has a long training time, but since it only
-        compares the the binary strong classifiers instead of the entire training set to test wach image, its running
-        time is much faster than K Nearest Neighbors.
-        % TODO: Answer
+        compares the binary strong classifiers instead of the entire training set to test each image, its running
+        time to predict is much faster than K Nearest Neighbors. Additionally, I cached classifiers after training, so
+        that each test wouldn't have to recompute the classifiers, but use the pre-trained ones.
+        The ship class is one where KNN does better than Adaboosting, and the cat class is one where Adaboosting does
+        better than KNN.
 
-        \item \textbf{Cross-validation.} Perform 5-fold cross-validation for the K-nearest neighbor classifier. Report the
-        optimized hyper-parameter K and the corresponding confusion matrix.
-        % TODO: Answer
+        \item \textbf{Cross-validation.} Perform 5-fold cross-validation for the K-nearest neighbor classifier.
+        Report the optimized hyper-parameter K and the corresponding confusion matrix.
+        The optimal K for my KNN implementation was 1. I performed 5-fold cross-validation on the data set, and
+        averaged about 37.2\% accuracy. The confusion matrix is shown below.\newline
+        \includegraphics[width=\textwidth]{Output Pictures/Confusion Matrix KNN}
 
         \item \textbf{Cross-validation \Romannum{2}.} Perform 5-fold cross-validation for the AdaBoosting classifier.
         Report the optimal value for the number of weak classifiers.
-        % TODO: Answer
+        The optimal number of weak classifiers for my Adaboosting implementation was 100. I performed 5-fold cross
+        -validation on the data set, and averaged about 11.2\% accuracy. The confusion matrix is shown below.\newline
+        \includegraphics[width=\textwidth]{Output Pictures/Confusion Matrix AdaBoost}
+        % TODO: Fix Adaboost accuracy
     \end{itemize}
 \end{document}

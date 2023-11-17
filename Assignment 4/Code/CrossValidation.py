@@ -36,12 +36,26 @@ def compute_best_k(all_data, all_labels, label_names):
     print(accuracies)
 
 
-def compute_best_weak_classifiers():
+def compute_best_weak_classifiers(all_data, all_labels, label_names):
+    n = 5
+    accuracies = np.zeros(5)
+
+    for i, t in enumerate([10, 50, 100, 150]):
+        accuracy_weak_classifiers = 0
+        for j in range(n):
+            # 5-fold cross-validation
+            tr_d, tr_l, te_d, te_l = n_fold_cross_validation(all_data, all_labels, j)
+            accuracy = AdaBoost.train_and_test(t, tr_d, tr_l, te_d, te_l, label_names)
+            print(accuracy)
+            accuracy_weak_classifiers += accuracy
+        accuracies[i] = accuracy_weak_classifiers / n
     pass
+
 
 def confusion_matrix_knn(training_data, training_labels, testing_data, testing_labels, label_names):
     k = 1
-    accuracy, predicted = KNearestNeighbor.computeKNN(k, 1, training_data, training_labels, testing_data, testing_labels, label_names)
+    accuracy, predicted = KNearestNeighbor.computeKNN(k, 1, training_data, training_labels, testing_data,
+                                                      testing_labels, label_names)
     confusion_matrix = np.zeros((len(label_names), len(label_names)), dtype=np.uint32)
     for i, label in enumerate(testing_labels):
         confusion_matrix[label, predicted[i]] += 1
@@ -50,7 +64,7 @@ def confusion_matrix_knn(training_data, training_labels, testing_data, testing_l
     cax = ax.matshow(confusion_matrix)
     for (i, j), z in np.ndenumerate(confusion_matrix):
         ax.text(j, i, '{:d}'.format(z), ha='center', va='center',
-                            bbox=dict(boxstyle='round', facecolor='white', edgecolor='0.3'))
+                bbox=dict(boxstyle='round', facecolor='white', edgecolor='0.3'))
     fig.colorbar(cax)
 
     ax.set_xticks(np.arange(len(label_names)))
@@ -64,10 +78,36 @@ def confusion_matrix_knn(training_data, training_labels, testing_data, testing_l
     plt.close()
 
 
+def confusion_matrix_adaboost(training_data, training_labels, testing_data, testing_labels, label_names):
+    accuracy, predicted, testing_labels = AdaBoost.test(testing_data, testing_labels)
+    confusion_matrix = np.zeros((len(label_names), len(label_names)), dtype=np.uint32)
+    for i, label in enumerate(testing_labels):
+        confusion_matrix[label, predicted[i]] += 1
+    fig = plt.figure()
+    ax = fig.add_subplot()
+    cax = ax.matshow(confusion_matrix)
+    for (i, j), z in np.ndenumerate(confusion_matrix):
+        ax.text(j, i, '{:d}'.format(z), ha='center', va='center',
+                bbox=dict(boxstyle='round', facecolor='white', edgecolor='0.3'))
+    fig.colorbar(cax)
+
+    ax.set_xticks(np.arange(len(label_names)))
+    ax.set_yticks(np.arange(len(label_names)))
+    fig.suptitle('Predicted')
+    ax.set_xticklabels([s for s in label_names])
+    ax.set_yticklabels(["Expected " + s for s in label_names])
+
+    plt.savefig(f"../Output Pictures/Confusion Matrix AdaBoost.png")
+    plt.show()
+    plt.close()
+
+
 if __name__ == "__main__":
     tr_d, tr_l, te_d, te_l, l_names = LoadImages.all_images()
 
     all_d = np.concatenate((tr_d, te_d))
     all_l = np.concatenate((tr_l, te_l))
     # compute_best_k(all_d, all_l, l_names)
-    confusion_matrix_knn(tr_d, tr_l, te_d, te_l, l_names)
+    # confusion_matrix_knn(tr_d, tr_l, te_d, te_l, l_names)
+    compute_best_weak_classifiers(all_d, all_l, l_names)
+    # confusion_matrix_adaboost(tr_d, tr_l, te_d, te_l, l_names)
