@@ -40,7 +40,7 @@ def compute_best_weak_classifiers(all_data, all_labels, label_names):
     n = 5
     accuracies = np.zeros(5)
 
-    for i, t in enumerate([10, 50, 100, 150]):
+    for i, t in enumerate([5, 10, 25, 50]):
         accuracy_weak_classifiers = 0
         for j in range(n):
             # 5-fold cross-validation
@@ -49,7 +49,7 @@ def compute_best_weak_classifiers(all_data, all_labels, label_names):
             print(accuracy)
             accuracy_weak_classifiers += accuracy
         accuracies[i] = accuracy_weak_classifiers / n
-    pass
+    print(accuracies)
 
 
 def confusion_matrix_knn(training_data, training_labels, testing_data, testing_labels, label_names):

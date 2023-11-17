@@ -27,26 +27,26 @@ def get_haar_indices(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
     else:
         for x in tqdm(range(width), desc="Getting Haar Indices"):
             for y in range(height):
-                for w in range(1, width - x):
-                    for h in range(1, height - y):
+                for w in range(1, width):
+                    for h in range(1, height):
                         if y + h - 1 < height and x + 2 * w - 1 < width:
                             # Horizontal-2
                             two_piece.append(
                                 (y, x, y + h - 1, x + w - 1, y, x + w, y + h - 1, x + 2 * w - 1))
-                            if y + h - 1 < height and x + 3 * w - 1 < width:
-                                # Horizontal-3
-                                three_piece.append(
-                                    (y, x, y + h - 1, x + w - 1, y, x + w, y + h - 1, x + 2 * w - 1,
-                                     y, x + 2 * w, y + h - 1, x + 3 * w - 1))
+                        if y + h - 1 < height and x + 3 * w - 1 < width:
+                            # Horizontal-3
+                            three_piece.append(
+                                (y, x, y + h - 1, x + w - 1, y, x + w, y + h - 1, x + 2 * w - 1,
+                                 y, x + 2 * w, y + h - 1, x + 3 * w - 1))
                         if y + 2 * h - 1 < height and x + w - 1 < width:
                             # Vertical-2
                             two_piece.append(
                                 (y, x, y + h - 1, x + w - 1, y + h, x, y + 2 * h - 1, x + w - 1))
-                            if y + 3 * h - 1 < height and x + w - 1 < width:
-                                # Vertical-3
-                                three_piece.append(
-                                    (y, x, y + h - 1, x + w - 1, y + h, x, y + 2 * h - 1, x + w - 1,
-                                     y + 2 * h, x, y + 3 * h - 1, x + w - 1))
+                        if y + 3 * h - 1 < height and x + w - 1 < width:
+                            # Vertical-3
+                            three_piece.append(
+                                (y, x, y + h - 1, x + w - 1, y + h, x, y + 2 * h - 1, x + w - 1,
+                                 y + 2 * h, x, y + 3 * h - 1, x + w - 1))
                         if y + 2 * h - 1 < height and x + 2 * w - 1 < width:
                             # Diagonal-4
                             four_piece.append(
@@ -181,7 +181,7 @@ def area(img, y1, x1, y2, x2):
     :param x2:
     :return:
     """
-    return (img[y2][x2] + img[y1][x1]) - (img[y1][x2] + img[y2][x1])
+    return (img[y2, x2] + img[y1, x1]) - (img[y1, x2] + img[y2, x1])
 
 
 class WeakClassifier:
@@ -215,26 +215,26 @@ def train_weak_classifier(weak_classifier: WeakClassifier, feature_per_image: np
     :return:
     """
 
-    min_threshold, max_threshold = np.min(feature_per_image), np.max(feature_per_image)
-    threshold_range = max_threshold - min_threshold
+    possible_thresholds = np.unique(feature_per_image)
+    translation = np.min(possible_thresholds)
+    scale = np.max(possible_thresholds - translation)
 
-    MAX_ITER = 100
+    MAX_ITER = 5
     for i in range(MAX_ITER):
         # Find the best threshold
         parity = 1
-        threshold = (i / MAX_ITER) * threshold_range + min_threshold
-        predictions = np.ones(len(binary_training_labels))
-        predictions[feature_per_image < threshold] = 0
+        threshold = (i / MAX_ITER) * scale + translation
+        predictions = np.zeros(len(binary_training_labels))
+        predictions[feature_per_image >= threshold] = 1
         error = np.sum(weights[binary_training_labels != predictions])
         if error > 0.5:
             error = 1 - error
             parity = -1
         if error < weak_classifier.error:
             weak_classifier.parity = parity
-            weak_classifier.threshold = threshold
             weak_classifier.feature_index = f_index
+            weak_classifier.threshold = threshold
             weak_classifier.error = error
-
     return weak_classifier
 
 
@@ -259,19 +259,26 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
         # Normalize the weights
         weights /= np.sum(weights)
 
-        min_error = np.inf
         weak_classifier = WeakClassifier()
         for feature_index in range(haar_features.shape[1]):
-            train_weak_classifier(weak_classifier, haar_features[:, feature_index], feature_index,
+            single_feature = haar_features[:, feature_index]
+            if np.all(single_feature == single_feature[0]):
+                continue
+            train_weak_classifier(weak_classifier, single_feature, feature_index,
                                   binary_training_labels, weights)
         beta = weak_classifier.error / (1 - weak_classifier.error)
         weak_classifier.alpha = np.log(1 / beta)
-        strong_classifier.append(weak_classifier)
-        predictions = np.ones(len(binary_training_labels), dtype=np.uint8)
-        predictions[weak_classifier.parity * haar_features[:, weak_classifier.feature_index] <
-                    weak_classifier.parity * weak_classifier.threshold] = 0
 
-        weights *= np.power(beta, 1 - predictions)
+        strong_classifier.append(weak_classifier)
+        predictions = np.zeros(len(binary_training_labels), dtype=np.uint8)
+        predictions[weak_classifier.parity * haar_features[:, weak_classifier.feature_index] <
+                    weak_classifier.parity * weak_classifier.threshold] = 1
+        print(weak_classifier.error)
+
+        for i in range(len(weights)):
+            if predictions[i] == binary_training_labels[i]:
+                weights[i] *= beta
+        # weights *= np.power(beta, predictions)
 
     strong_classifier = np.array(strong_classifier)
     queue.put((index, strong_classifier))
@@ -279,7 +286,7 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
 
 
 def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.ndarray, number_of_weak_classifiers: int =
-100):
+10):
     """
     Trains the AdaBoost classifier
     :param training_data:
@@ -333,6 +340,7 @@ def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.nda
 def classify_image(features: np.ndarray, binary_classifiers: np.ndarray, correct_label) -> np.int8:
     binary_predictions = np.zeros(len(binary_classifiers))
     scores = np.zeros(len(binary_classifiers))
+    sum_alpha_h, sum_alpha = 0, 0
     for index, strong_classifier in enumerate(binary_classifiers):
         sum_alpha_h = 0
         sum_alpha = 0
@@ -343,7 +351,12 @@ def classify_image(features: np.ndarray, binary_classifiers: np.ndarray, correct
         if sum_alpha_h > .5 * sum_alpha:
             binary_predictions[index] = 1
             scores[index] = sum_alpha_h / sum_alpha
+    assert sum_alpha_h is not np.nan, "Sum Alpha H is NaN"
+    assert sum_alpha_h is not np.inf, "Sum Alpha H is Inf"
+    assert sum_alpha is not np.nan, "Sum Alpha is NaN"
+    assert sum_alpha is not np.inf, "Sum Alpha is Inf"
     prediction = np.argmax(scores)
+    print(f"Alpha_H: {sum_alpha_h} | Alpha: {sum_alpha}")
     return prediction
 
 
@@ -376,8 +389,8 @@ def train_and_test(t, training_data: np.ndarray, training_labels: np.ndarray, te
 CACHE_DIR = "../AdaBoostCache"
 FEATURE_SUBSET = 2000
 TRAINED = False
-# Uses weak classifiers to classify images
 
+# Uses weak classifiers to classify images
 if __name__ == "__main__":
     if not os.path.isdir(f"{CACHE_DIR}"):
         os.mkdir(f"{CACHE_DIR}")
@@ -386,6 +399,7 @@ if __name__ == "__main__":
     if not TRAINED:
         binary_classifiers = train(tr_d, tr_l, label_names)
     test(te_d, te_l)
-    # import CrossValidation
-    # CrossValidation.confusion_matrix_adaboost(tr_d, tr_l, te_d, te_l, label_names)
-    # del CrossValidation
+    import CrossValidation
+
+    CrossValidation.confusion_matrix_adaboost(tr_d, tr_l, te_d, te_l, label_names)
+    del CrossValidation
