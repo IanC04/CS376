@@ -203,8 +203,9 @@ class WeakClassifier:
                 f"Error: {self.error}, Alpha: {self.alpha}")
 
 
-def train_weak_classifier(feature_per_image: np.ndarray, f_index, binary_training_labels: np.ndarray,
-                          weights: np.ndarray) -> WeakClassifier:
+def train_weak_classifier(weak_classifier: WeakClassifier, feature_per_image: np.ndarray, f_index,
+                          binary_training_labels:
+                          np.ndarray, weights: np.ndarray) -> WeakClassifier:
     """
     Trains a weak classifier
     :param feature_per_image: The feature to train on, includes all images
@@ -214,11 +215,10 @@ def train_weak_classifier(feature_per_image: np.ndarray, f_index, binary_trainin
     :return:
     """
 
-    weak_classifier = WeakClassifier(feature_index=f_index)
     min_threshold, max_threshold = np.min(feature_per_image), np.max(feature_per_image)
     threshold_range = max_threshold - min_threshold
 
-    MAX_ITER = 10
+    MAX_ITER = 100
     for i in range(MAX_ITER):
         # Find the best threshold
         parity = 1
@@ -229,10 +229,10 @@ def train_weak_classifier(feature_per_image: np.ndarray, f_index, binary_trainin
         if error > 0.5:
             error = 1 - error
             parity = -1
-
         if error < weak_classifier.error:
             weak_classifier.parity = parity
             weak_classifier.threshold = threshold
+            weak_classifier.feature_index = f_index
             weak_classifier.error = error
 
     return weak_classifier
@@ -260,20 +260,17 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
         weights /= np.sum(weights)
 
         min_error = np.inf
-        best_weak_classifier = None
+        weak_classifier = WeakClassifier()
         for feature_index in range(haar_features.shape[1]):
-            weak_classifier = train_weak_classifier(haar_features[:, feature_index], feature_index,
-                                                    binary_training_labels, weights)
-            if weak_classifier.error < min_error:
-                min_error = weak_classifier.error
-                best_weak_classifier = weak_classifier
-            del weak_classifier
-        beta = min_error / (1 - min_error)
-        best_weak_classifier.alpha = np.log(1 / beta)
-        strong_classifier.append(best_weak_classifier)
-        predictions = np.ones(len(binary_training_labels))
-        predictions[best_weak_classifier.parity * haar_features[:, best_weak_classifier.feature_index] <
-                    best_weak_classifier.parity * best_weak_classifier.threshold] = 0
+            train_weak_classifier(weak_classifier, haar_features[:, feature_index], feature_index,
+                                  binary_training_labels, weights)
+        beta = weak_classifier.error / (1 - weak_classifier.error)
+        weak_classifier.alpha = np.log(1 / beta)
+        strong_classifier.append(weak_classifier)
+        predictions = np.ones(len(binary_training_labels), dtype=np.uint8)
+        predictions[weak_classifier.parity * haar_features[:, weak_classifier.feature_index] <
+                    weak_classifier.parity * weak_classifier.threshold] = 0
+
         weights *= np.power(beta, 1 - predictions)
 
     strong_classifier = np.array(strong_classifier)
@@ -282,7 +279,7 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
 
 
 def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.ndarray, number_of_weak_classifiers: int =
-10):
+100):
     """
     Trains the AdaBoost classifier
     :param training_data:
@@ -343,14 +340,10 @@ def classify_image(features: np.ndarray, binary_classifiers: np.ndarray, correct
             if features[weak_classifier.feature_index] >= weak_classifier.threshold:
                 sum_alpha_h += weak_classifier.alpha
             sum_alpha += weak_classifier.alpha
-            if sum_alpha_h > .5 * sum_alpha:
-                binary_predictions[index] = 1
-                scores[index] = sum_alpha_h / sum_alpha
+        if sum_alpha_h > .5 * sum_alpha:
+            binary_predictions[index] = 1
+            scores[index] = sum_alpha_h / sum_alpha
     prediction = np.argmax(scores)
-    # if prediction != correct_label:
-    #     print(f"Incorrect Prediction: {prediction}, Correct Label: {correct_label}")
-    # else:
-    #     print(f"Correct Prediction: {prediction}")
     return prediction
 
 
@@ -382,7 +375,7 @@ def train_and_test(t, training_data: np.ndarray, training_labels: np.ndarray, te
 
 CACHE_DIR = "../AdaBoostCache"
 FEATURE_SUBSET = 2000
-TRAINED = True
+TRAINED = False
 # Uses weak classifiers to classify images
 
 if __name__ == "__main__":
@@ -390,9 +383,9 @@ if __name__ == "__main__":
         os.mkdir(f"{CACHE_DIR}")
     print("AdaBoost.py")
     tr_d, tr_l, te_d, te_l, label_names = LoadImages.all_images()
-    # if not TRAINED:
-    #     binary_classifiers = train(tr_d, tr_l, label_names)
-    # test(te_d, te_l)
+    if not TRAINED:
+        binary_classifiers = train(tr_d, tr_l, label_names)
+    test(te_d, te_l)
     # import CrossValidation
     # CrossValidation.confusion_matrix_adaboost(tr_d, tr_l, te_d, te_l, label_names)
     # del CrossValidation
