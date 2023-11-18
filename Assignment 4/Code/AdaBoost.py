@@ -219,7 +219,7 @@ def train_weak_classifier(weak_classifier: WeakClassifier, feature_per_image: np
     translation = np.min(all_thresholds)
     scale = np.max(all_thresholds - translation)
 
-    SCALE_FACTOR = 10
+    SCALE_FACTOR = 100
     for i in range(SCALE_FACTOR):
         # Find the best threshold
         parity = 1
@@ -286,7 +286,7 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
 
 
 def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.ndarray, number_of_weak_classifiers: int =
-50):
+100):
     """
     Trains the AdaBoost classifier
     :param training_data:
@@ -399,7 +399,7 @@ if __name__ == "__main__":
     if not TRAINED:
         binary_classifiers = train(tr_d, tr_l, label_names)
     test(te_d, te_l)
-    import CrossValidation
 
+    import CrossValidation
     CrossValidation.confusion_matrix_adaboost(tr_d, tr_l, te_d, te_l, label_names)
     del CrossValidation
