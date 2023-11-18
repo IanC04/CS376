@@ -271,7 +271,7 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
 
         strong_classifier.append(weak_classifier)
         predictions = np.zeros(len(binary_training_labels), dtype=np.uint8)
-        predictions[weak_classifier.parity * haar_features[:, weak_classifier.feature_index] <
+        predictions[weak_classifier.parity * haar_features[:, weak_classifier.feature_index] >=
                     weak_classifier.parity * weak_classifier.threshold] = 1
         print(weak_classifier.error)
 
