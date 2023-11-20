@@ -410,11 +410,9 @@ def classify_image(features: np.ndarray, binary_classifiers: np.ndarray, correct
         if sum_alpha_h > .5 * sum_alpha:
             binary_predictions[index] = 1
             scores[index] = sum_alpha_h / sum_alpha
-    assert sum_alpha_h is not np.nan, "Sum Alpha H is NaN"
-    assert sum_alpha_h is not np.inf, "Sum Alpha H is Inf"
-    assert sum_alpha is not np.nan, "Sum Alpha is NaN"
-    assert sum_alpha is not np.inf, "Sum Alpha is Inf"
-    prediction = np.argmax(scores)
+    assert not np.isnan(sum_alpha_h) and not np.isinf(sum_alpha_h), ("Sum Alpha H is NaN or Inf")
+    assert not np.isnan(sum_alpha) and not np.isinf(sum_alpha), ("Sum Alpha is NaN or Inf")
+    prediction = np.argmax(np.where(binary_predictions == 1, scores, 0))
     # print(f"Alpha_H: {sum_alpha_h} | Alpha: {sum_alpha}")
     return prediction
 
