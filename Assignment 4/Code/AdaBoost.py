@@ -449,7 +449,7 @@ def train_and_test(t, training_data: np.ndarray, training_labels: np.ndarray,
 
 CACHE_DIR = "../AdaBoostCache"
 FEATURE_SUBSET = 2000
-TRAINED = False
+TRAINED = True
 
 # Uses weak classifiers to classify images
 if __name__ == "__main__":
@@ -462,6 +462,5 @@ if __name__ == "__main__":
     test(te_d, te_l)
 
     import CrossValidation
-
     CrossValidation.confusion_matrix_adaboost(tr_d, tr_l, te_d, te_l, label_names)
     del CrossValidation
