@@ -18,6 +18,9 @@ def get_haar_indices(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
     two_piece = []
     three_piece = []
     four_piece = []
+    two_piece_large_window = []
+    three_piece_large_window = []
+    four_piece_large_window = []
     if os.path.isfile(f"{CACHE_DIR}/haar_indices.npy"):
         with open(f"{CACHE_DIR}/haar_indices.npy", 'rb') as f:
             two_piece = np.load(f)
@@ -33,26 +36,52 @@ def get_haar_indices(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
                             # Horizontal-2
                             two_piece.append(
                                 (y, x, y + h - 1, x + w - 1, y, x + w, y + h - 1, x + 2 * w - 1))
+
+                            if w > 8 and h > 8:
+                                two_piece_large_window.append(
+                                    (y, x, y + h - 1, x + w - 1, y, x + w, y + h - 1,
+                                     x + 2 * w - 1))
                         if y + h - 1 < height and x + 3 * w - 1 < width:
                             # Horizontal-3
                             three_piece.append(
                                 (y, x, y + h - 1, x + w - 1, y, x + w, y + h - 1, x + 2 * w - 1,
                                  y, x + 2 * w, y + h - 1, x + 3 * w - 1))
+
+                            if w > 6 and h > 6:
+                                three_piece_large_window.append(
+                                    (y, x, y + h - 1, x + w - 1, y, x + w, y + h - 1, x + 2 * w - 1,
+                                     y, x + 2 * w, y + h - 1, x + 3 * w - 1))
                         if y + 2 * h - 1 < height and x + w - 1 < width:
                             # Vertical-2
                             two_piece.append(
                                 (y, x, y + h - 1, x + w - 1, y + h, x, y + 2 * h - 1, x + w - 1))
+
+                            if w > 8 and h > 8:
+                                two_piece_large_window.append(
+                                    (y, x, y + h - 1, x + w - 1, y + h, x, y + 2 * h - 1,
+                                     x + w - 1))
                         if y + 3 * h - 1 < height and x + w - 1 < width:
                             # Vertical-3
                             three_piece.append(
                                 (y, x, y + h - 1, x + w - 1, y + h, x, y + 2 * h - 1, x + w - 1,
                                  y + 2 * h, x, y + 3 * h - 1, x + w - 1))
+
+                            if w > 6 and h > 6:
+                                three_piece_large_window.append(
+                                    (y, x, y + h - 1, x + w - 1, y + h, x, y + 2 * h - 1, x + w - 1,
+                                     y + 2 * h, x, y + 3 * h - 1, x + w - 1))
                         if y + 2 * h - 1 < height and x + 2 * w - 1 < width:
                             # Diagonal-4
                             four_piece.append(
                                 (y, x, y + h - 1, x + w - 1, y, x + w, y + h - 1, x + 2 * w - 1,
                                  y + h, x, y + 2 * h - 1, x + w - 1, y + h, x + w,
                                  y + 2 * h - 1, x + 2 * w - 1))
+
+                            if w > 8 and h > 8:
+                                four_piece_large_window.append(
+                                    (y, x, y + h - 1, x + w - 1, y, x + w, y + h - 1, x + 2 * w - 1,
+                                     y + h, x, y + 2 * h - 1, x + w - 1, y + h, x + w,
+                                     y + 2 * h - 1, x + 2 * w - 1))
         two_piece = np.array(two_piece)
         three_piece = np.array(three_piece)
         four_piece = np.array(four_piece)
@@ -76,6 +105,14 @@ def get_haar_indices(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
         two_piece = generator.choice(two_piece, size=amount_each[0], replace=False)
         three_piece = generator.choice(three_piece, size=amount_each[1], replace=False)
         four_piece = generator.choice(four_piece, size=amount_each[2], replace=False)
+
+        # Use only large window features
+        two_piece_large_window = np.array(two_piece_large_window)
+        three_piece_large_window = np.array(three_piece_large_window)
+        four_piece_large_window = np.array(four_piece_large_window)
+        two_piece = generator.choice(two_piece_large_window, size=amount_each[0], replace=False)
+        three_piece = generator.choice(three_piece_large_window, size=amount_each[1], replace=False)
+        four_piece = generator.choice(four_piece_large_window, size=amount_each[2], replace=False)
         with open(f"{CACHE_DIR}/haar_indices_subset.npy", 'wb') as f:
             np.save(f, two_piece)
             np.save(f, three_piece)
@@ -101,7 +138,8 @@ def get_integral_images(imgs: np.ndarray) -> np.ndarray:
 
 def rgb2gray(rgb: np.ndarray) -> np.ndarray:
     """
-    Under the assumption that the images are RGB and of the form [r:[0:1024), g:[1024:2048), b:[2048:3072)]
+    Under the assumption that the images are RGB and of the form [r:[0:1024), g:[1024:2048),
+    b:[2048:3072)]
     Converts them to grayscale
     """
     r, g, b = rgb[:, :1024], rgb[:, 1024:2048], rgb[:, 2048:]
@@ -133,7 +171,9 @@ def compute_haar_features(imgs: np.ndarray, testing: bool = False) -> np.ndarray
         haar_features = np.zeros((len(integral_imgs), FEATURE_SUBSET), dtype=np.float64)
         feature = None
         img_index, haar_index = 0, 0
-        for ii in tqdm(integral_imgs, desc=f"Computing Haar Features of {"Testing" if testing else "Training"} set"):
+        for ii in tqdm(integral_imgs,
+                       desc=f"Computing Haar Features of {"Testing" if testing else "Training"} "
+                            f"set"):
             haar_index = 0
             for coord_type in haar_indices:
                 for coord_set in coord_type:
@@ -173,7 +213,8 @@ def compute_haar_features(imgs: np.ndarray, testing: bool = False) -> np.ndarray
 
 def area(img, y1, x1, y2, x2):
     """
-    Returns the area of a rectangle with the given coordinates of the top left: (y1, x1) and bottom right: (y2, x2)
+    Returns the area of a rectangle with the given coordinates of the top left: (y1,
+    x1) and bottom right: (y2, x2)
     :param img:
     :param y1:
     :param x1:
@@ -199,8 +240,10 @@ class WeakClassifier:
         self.alpha = alpha
 
     def __str__(self):
-        return (f"Parity: {self.parity}, Feature Index: {self.feature_index}, Threshold: {self.threshold}, "
-                f"Error: {self.error}, Alpha: {self.alpha}")
+        return (
+            f"Parity: {self.parity}, Feature Index: {self.feature_index}, Threshold: "
+            f"{self.threshold}, "
+            f"Error: {self.error}, Alpha: {self.alpha}")
 
 
 def train_weak_classifier(weak_classifier: WeakClassifier, feature_per_image: np.ndarray, f_index,
@@ -219,7 +262,7 @@ def train_weak_classifier(weak_classifier: WeakClassifier, feature_per_image: np
     translation = np.min(all_thresholds)
     scale = np.max(all_thresholds - translation)
 
-    scale_factor = 10
+    scale_factor = 50
     for i in range(scale_factor):
         # Find the best threshold
         parity = 1
@@ -227,6 +270,9 @@ def train_weak_classifier(weak_classifier: WeakClassifier, feature_per_image: np
         predictions = np.zeros(len(binary_training_labels))
         predictions[feature_per_image >= threshold] = 1
         error = np.sum(weights[binary_training_labels != predictions])
+        if error < 0 or error > 1:
+            print(f"Error is {error} for feature: {f_index}")
+            error = round(error)
         if error > 0.5:
             error = 1 - error
             parity = -1
@@ -235,10 +281,12 @@ def train_weak_classifier(weak_classifier: WeakClassifier, feature_per_image: np
             weak_classifier.feature_index = f_index
             weak_classifier.threshold = threshold
             weak_classifier.error = error
+        assert 0 <= error <= 0.5, f"Error is {error}"
     return weak_classifier
 
 
-def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: np.ndarray, T: np.uint16,
+def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: np.ndarray,
+                            T: np.uint16,
                             queue: mp.Queue = None, index: int = None) -> np.ndarray:
     """
     Trains a binary classifier
@@ -252,8 +300,12 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
     l = np.count_nonzero(binary_training_labels)
     m = len(binary_training_labels) - l
 
-    weights = np.array([1 / (2 * l) if label == 1 else 1 / (2 * m) for label in binary_training_labels])
+    weights = np.array(
+        [1 / (2 * l) if label == 1 else 1 / (2 * m) for label in binary_training_labels])
     strong_classifier = []
+
+    # Remove features that are all 0
+    zero_indices = np.where(np.all(np.isclose(haar_features, 0), axis=0))[0]
 
     for _ in tqdm(range(T), desc=f"Training Binary Classifier: {index}"):
         # Normalize the weights
@@ -261,19 +313,22 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
 
         weak_classifier = WeakClassifier()
         for feature_index in range(haar_features.shape[1]):
+            if feature_index in zero_indices:
+                continue
+
             single_feature = haar_features[:, feature_index]
 
             train_weak_classifier(weak_classifier, single_feature, feature_index,
                                   binary_training_labels, weights)
         beta = weak_classifier.error / (1 - weak_classifier.error)
         # weak_classifier.alpha = np.log((1 / beta))
+        assert 0 <= beta <= 1, f"Beta is {beta} for feature: {weak_classifier.feature_index}"
         weak_classifier.alpha = -np.log(beta)
 
         strong_classifier.append(weak_classifier)
         predictions = np.zeros(len(binary_training_labels), dtype=np.uint8)
-        predictions[weak_classifier.parity * haar_features[:, weak_classifier.feature_index] >=
+        predictions[weak_classifier.parity * haar_features[:, weak_classifier.feature_index] <
                     weak_classifier.parity * weak_classifier.threshold] = 1
-        print(weak_classifier.error)
 
         for i in range(len(weights)):
             if predictions[i] == binary_training_labels[i]:
@@ -285,8 +340,9 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
     return strong_classifier
 
 
-def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.ndarray, number_of_weak_classifiers: int =
-10):
+def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.ndarray,
+          number_of_weak_classifiers: int =
+          10):
     """
     Trains the AdaBoost classifier
     :param training_data:
@@ -302,12 +358,9 @@ def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.nda
             return all_strong_classifiers
     else:
         T = np.uint16(number_of_weak_classifiers)
-        assert T < FEATURE_SUBSET, f"T must be less than the feature subset size of {FEATURE_SUBSET}"
+        assert T < FEATURE_SUBSET, (f"T must be less than the feature subset size of "
+                                    f"{FEATURE_SUBSET}")
         haar_features = compute_haar_features(training_data)
-
-        # Remove features that are all 0
-        zero_indices = np.where(np.all(np.isclose(haar_features, 0), axis=0))
-        haar_features = np.delete(haar_features, zero_indices, axis=1)
 
         # Rows of classifiers are strong classifiers
         all_strong_classifiers = np.ndarray((len(labels), T), dtype=WeakClassifier)
@@ -317,8 +370,9 @@ def train(training_data: np.ndarray, training_labels: np.ndarray, labels: np.nda
         for index, l in enumerate(labels):
             print(f"\nTraining {l}")
             binary_training_labels = np.where(training_labels == index, 1, 0)
-            processes.append(mp.Process(target=train_binary_classifier, args=(haar_features, binary_training_labels,
-                                                                              T, queue, index)))
+            processes.append(mp.Process(target=train_binary_classifier,
+                                        args=(haar_features, binary_training_labels,
+                                              T, queue, index)))
             # strong_classifier = train_binary_classifier(haar_features, binary_training_labels, T)
             # all_strong_classifiers[index, :] = strong_classifier
 
@@ -375,13 +429,15 @@ def test(testing_data: np.ndarray, testing_labels: np.ndarray):
     haar_features = compute_haar_features(testing_data, testing=True)
     predictions = np.zeros(len(testing_labels), dtype=np.uint8)
     for img in range(testing_data.shape[0]):
-        predictions[img] = classify_image(haar_features[img, :], all_classifiers, testing_labels[img])
+        predictions[img] = classify_image(haar_features[img, :], all_classifiers,
+                                          testing_labels[img])
     accuracy = np.sum(predictions == testing_labels) / len(testing_labels)
     print(f"Accuracy: {accuracy}")
     return accuracy, predictions, testing_labels
 
 
-def train_and_test(t, training_data: np.ndarray, training_labels: np.ndarray, testing_data: np.ndarray,
+def train_and_test(t, training_data: np.ndarray, training_labels: np.ndarray,
+                   testing_data: np.ndarray,
                    testing_labels: np.ndarray, label_names: np.ndarray):
     global TRAINED
     TRAINED = False

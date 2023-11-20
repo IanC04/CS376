@@ -92,9 +92,9 @@
         over L2 norm, and the following 2 figures are tested with 1000 samples with no dimensional reduction.\newline
         \includegraphics[width=\textwidth]{Output Pictures/Nearest Neighbors L1}
         \includegraphics[width=\textwidth]{Output Pictures/Nearest Neighbors L2}
-        For Adaptive Boosting classifier, the accuracy is about 11\%. This is because it's very biased towards the
-        third label, the cat. The training time is very long, but the testing time is very fast.
-        % TODO: Fix Adaboost accuracy
+        For Adaptive Boosting classifier, the accuracy is about 12\%. This is because it's very
+        biased towards the third label, the cat. The training time is very long, but optimizaed
+        with multi-processing on multiple cores, but the testing time is very fast.
         K Nearest Neighbors has no training time, but since comparisons to the entire training set must be made for
         each test image, it has a very long testing time. This can be improved through PCA, where only
         certain components are considered for the nearest neighbor calculation. Adaboosting
@@ -113,8 +113,8 @@
         \item \textbf{Cross-validation \Romannum{2}.} Perform 5-fold cross-validation for the AdaBoosting classifier.
         Report the optimal value for the number of weak classifiers.\newline
         The optimal number of weak classifiers for my Adaboosting implementation was 100. I performed 5-fold cross
-        -validation on the data set, and averaged about 11.2\% accuracy. The confusion matrix is shown below.\newline
+        -validation on the data set, and averaged about 12\% accuracy. The confusion matrix is
+        shown below.\newline
         \includegraphics[width=\textwidth]{Output Pictures/Confusion Matrix AdaBoost}
-        % TODO: Fix Adaboost accuracy
     \end{itemize}
 \end{document}
