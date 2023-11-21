@@ -3,6 +3,7 @@ import LoadImages
 import KNearestNeighbor
 import AdaBoost
 import matplotlib.pyplot as plt
+from sklearn.ensemble import AdaBoostClassifier
 
 
 def n_fold_cross_validation(all_data: np.ndarray, all_labels: np.ndarray, slice: int, n: int = 5):
@@ -80,6 +81,11 @@ def confusion_matrix_knn(training_data, training_labels, testing_data, testing_l
 
 def confusion_matrix_adaboost(training_data, training_labels, testing_data, testing_labels, label_names):
     accuracy, predicted, testing_labels = AdaBoost.test(testing_data, testing_labels)
+
+    # abc = AdaBoostClassifier(n_estimators=10, random_state=0)
+    # model = abc.fit(training_data, training_labels)
+    # predicted = model.predict(testing_data)
+
     confusion_matrix = np.zeros((len(label_names), len(label_names)), dtype=np.uint32)
     for i, label in enumerate(testing_labels):
         confusion_matrix[label, predicted[i]] += 1

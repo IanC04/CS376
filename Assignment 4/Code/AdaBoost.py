@@ -3,6 +3,7 @@ import numpy as np
 from tqdm import tqdm
 import os
 import multiprocessing as mp
+from sklearn.ensemble import AdaBoostClassifier
 
 
 def get_haar_indices(width, height) -> (np.ndarray, np.ndarray, np.ndarray):
@@ -280,8 +281,8 @@ def train_weak_classifier(weak_classifier: WeakClassifier, feature_per_image: np
             weak_classifier.parity = parity
             weak_classifier.feature_index = f_index
             weak_classifier.threshold = threshold
-            weak_classifier.error = error
-        assert 0 <= error <= 0.5, f"Error is {error}"
+            weak_classifier.error = max(error, 0.1)
+        assert 0 < error <= 0.5, f"Error is {error}"
     return weak_classifier
 
 
@@ -322,7 +323,7 @@ def train_binary_classifier(haar_features: np.ndarray, binary_training_labels: n
                                   binary_training_labels, weights)
         beta = weak_classifier.error / (1 - weak_classifier.error)
         # weak_classifier.alpha = np.log((1 / beta))
-        assert 0 <= beta <= 1, f"Beta is {beta} for feature: {weak_classifier.feature_index}"
+        assert 0 < beta < 1, f"Beta is {beta} for feature: {weak_classifier.feature_index}"
         weak_classifier.alpha = -np.log(beta)
 
         strong_classifier.append(weak_classifier)
@@ -410,8 +411,8 @@ def classify_image(features: np.ndarray, binary_classifiers: np.ndarray, correct
         if sum_alpha_h > .5 * sum_alpha:
             binary_predictions[index] = 1
             scores[index] = sum_alpha_h / sum_alpha
-    assert not np.isnan(sum_alpha_h) and not np.isinf(sum_alpha_h), ("Sum Alpha H is NaN or Inf")
-    assert not np.isnan(sum_alpha) and not np.isinf(sum_alpha), ("Sum Alpha is NaN or Inf")
+    assert not np.isnan(sum_alpha_h) and not np.isinf(sum_alpha_h), "Sum Alpha H is NaN or Inf"
+    assert not np.isnan(sum_alpha) and not np.isinf(sum_alpha), "Sum Alpha is NaN or Inf"
     prediction = np.argmax(np.where(binary_predictions == 1, scores, 0))
     # print(f"Alpha_H: {sum_alpha_h} | Alpha: {sum_alpha}")
     return prediction
@@ -455,10 +456,17 @@ if __name__ == "__main__":
         os.mkdir(f"{CACHE_DIR}")
     print("AdaBoost.py")
     tr_d, tr_l, te_d, te_l, label_names = LoadImages.all_images()
+
+    # abc = AdaBoostClassifier(n_estimators=10, random_state=0)
+    # model = abc.fit(tr_d, tr_l)
+    # predictions = model.predict(te_d)
+    # print("Accuracy of sklearn AdaBoost:", np.sum(predictions == te_l) / len(te_l))
+
     if not TRAINED:
         binary_classifiers = train(tr_d, tr_l, label_names)
     test(te_d, te_l)
 
     import CrossValidation
+
     CrossValidation.confusion_matrix_adaboost(tr_d, tr_l, te_d, te_l, label_names)
     del CrossValidation

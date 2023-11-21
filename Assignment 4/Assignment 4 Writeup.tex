@@ -89,20 +89,23 @@
         why? How about running time?\newline
         For K-Nearest Neighbor classifier, the accuracy is about 33\% for small values of K. Once K becomes too
         large, then too many different image classes would match the testing image. L1 norm had a slight advantage
-        over L2 norm, and the following 2 figures are tested with 1000 samples with no dimensional reduction.\newline
+        over L2 norm, and the following 2 figures are tested with 1000 samples with no dimensional reduction.
+        It did very well on the ship class, but not so well on the cat class.
         \includegraphics[width=\textwidth]{Output Pictures/Nearest Neighbors L1}
         \includegraphics[width=\textwidth]{Output Pictures/Nearest Neighbors L2}
-        For Adaptive Boosting classifier, the accuracy is about 12\%. This is because it's very
-        biased towards the third label, the cat. The training time is very long, but optimizaed
-        with multi-processing on multiple cores, but the testing time is very fast.
-        K Nearest Neighbors has no training time, but since comparisons to the entire training set must be made for
-        each test image, it has a very long testing time. This can be improved through PCA, where only
-        certain components are considered for the nearest neighbor calculation. Adaboosting
-        has a long training time, but since it only compares the binary strong classifiers instead of the entire
-        training set to test each image, its running time to predict is much faster than K Nearest Neighbors.
+        For Adaptive Boosting classifier, the accuracy is about 26\%. This is because it's very
+        biased towards not classifying the third and fourth labels. This was similar to the
+        results given by AdaBoosting. The training time is
+        very long, but optimizaed with multi-processing on multiple cores, but the testing time
+        is very fast. K Nearest Neighbors has no training time, but since comparisons to the
+        entire training set must be made for each test image, it has a very long testing time.
+        This can be improved through PCA, where only certain components are considered for the
+        nearest neighbor calculation. Adaboosting has a long training time, but since it only
+        compares the binary strong classifiers instead of the entire training set to test each
+        image, its running time to predict is much faster than K Nearest Neighbors.
         Additionally, I cached classifiers after training, so that each test wouldn't have to recompute the
         classifiers, but use the pre-trained ones. The ship class is one where KNN does better than Adaboosting, and
-        the cat class is one where Adaboosting does better than KNN.
+        the truck class is one where Adaboosting does better than KNN.
 
         \item \textbf{Cross-validation.} Perform 5-fold cross-validation for the K-nearest neighbor classifier.
         Report the optimized hyper-parameter K and the corresponding confusion matrix.\newline
@@ -113,7 +116,7 @@
         \item \textbf{Cross-validation \Romannum{2}.} Perform 5-fold cross-validation for the AdaBoosting classifier.
         Report the optimal value for the number of weak classifiers.\newline
         The optimal number of weak classifiers for my Adaboosting implementation was 100. I performed 5-fold cross
-        -validation on the data set, and averaged about 12\% accuracy. The confusion matrix is
+        -validation on the data set, and averaged about 26\% accuracy. The confusion matrix is
         shown below.\newline
         \includegraphics[width=\textwidth]{Output Pictures/Confusion Matrix AdaBoost}
     \end{itemize}
