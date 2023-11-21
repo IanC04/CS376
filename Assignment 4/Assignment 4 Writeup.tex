@@ -90,12 +90,12 @@
         For K-Nearest Neighbor classifier, the accuracy is about 33\% for small values of K. Once K becomes too
         large, then too many different image classes would match the testing image. L1 norm had a slight advantage
         over L2 norm, and the following 2 figures are tested with 1000 samples with no dimensional reduction.
-        It did very well on the ship class, but not so well on the cat class.
+        It did very well on the ship class, but not so well on the cat class.\newline
         \includegraphics[width=\textwidth]{Output Pictures/Nearest Neighbors L1}
         \includegraphics[width=\textwidth]{Output Pictures/Nearest Neighbors L2}
         For Adaptive Boosting classifier, the accuracy is about 26\%. This is because it's very
         biased towards not classifying the third and fourth labels. This was similar to the
-        results given by AdaBoosting. The training time is
+        results given by KNN. The training time is
         very long, but optimizaed with multi-processing on multiple cores, but the testing time
         is very fast. K Nearest Neighbors has no training time, but since comparisons to the
         entire training set must be made for each test image, it has a very long testing time.
