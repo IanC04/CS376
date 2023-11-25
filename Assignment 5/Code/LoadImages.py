@@ -13,7 +13,7 @@ FACE_KEYS = ("major_axis_radius", "minor_axis_radius", "angle", "center_x", "cen
 
 def load_folds():
     """
-    Load folds from fold_path
+    Load folds from fold_path or from cache if loaded previously
     """
     if os.path.exists(f"{CACHE_PATH}/folds.npy"):
         with open(f"{CACHE_PATH}/folds.npy", "rb") as f:
@@ -23,6 +23,7 @@ def load_folds():
         print("Cache not found. Generating folds...")
         folds = list()
 
+        # Ten folds
         for i in range(1, 11):
             images = f"{FOLDS_PATH}/FDDB-fold-{i:02d}.txt"
             ellipse = f"{FOLDS_PATH}/FDDB-fold-{i:02d}-ellipseList.txt"
@@ -39,6 +40,8 @@ def load_folds():
                         img_e = img_e.strip()
                         assert img == img_e, f"Image name mismatch: {img} != {img_e}"
                         num_faces = int(e.readline())
+
+                        # Multiple faces per image
                         for j in range(num_faces):
                             face_data = e.readline().split()
                             face_data.pop()
