@@ -23,6 +23,5 @@ class AdaBoost:
 if __name__ == "__main__":
     folds = LoadImages.load_folds()
     images = LoadImages.load_images(folds)
-    print("Loaded images.")
     model = AdaBoost(folds, images)
     model.train()

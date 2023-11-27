@@ -20,6 +20,7 @@ def load_folds():
     """
     if os.path.exists(f"{CACHE_PATH}/folds.npy"):
         with open(f"{CACHE_PATH}/folds.npy", "rb") as f:
+            print("Cache found. Loading folds...")
             folds = np.load(f, allow_pickle=True)
         return folds
     else:
@@ -84,6 +85,7 @@ def load_images(folds):
     """
     if os.path.exists(f"{CACHE_PATH}/images.npy"):
         with open(f"{CACHE_PATH}/images.npy", "rb") as f:
+            print("Cache found. Loading images...")
             images = np.load(f, allow_pickle=True)
         return images
     else:
