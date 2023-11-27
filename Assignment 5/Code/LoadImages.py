@@ -4,6 +4,9 @@ GitHub: https://github.com/IanC04
 """
 import os
 import numpy as np
+import cv2
+import matplotlib.pyplot as plt
+from tqdm import tqdm
 
 FOLDS_PATH = f"../Assignment 5 Pics/Data Set/FDDB-folds"
 PICTURES_PATH = f"../Assignment 5 Pics/Data Set/originalPics"
@@ -24,7 +27,7 @@ def load_folds():
         folds = list()
 
         # Ten folds
-        for i in range(1, 11):
+        for i in tqdm(range(1, 11), desc="Loading folds"):
             images = f"{FOLDS_PATH}/FDDB-fold-{i:02d}.txt"
             ellipse = f"{FOLDS_PATH}/FDDB-fold-{i:02d}-ellipseList.txt"
 
@@ -46,6 +49,7 @@ def load_folds():
                             face_data = e.readline().split()
                             face_data.pop()
                             face_data = [float(x) for x in face_data]
+                            face_data = get_bbox(face_data)
                             folds_data[img].append(np.array(face_data))
                         folds_data[img] = np.array(folds_data[img])
             folds.append(folds_data)
@@ -55,7 +59,67 @@ def load_folds():
         return folds
 
 
+def get_bbox(face_data):
+    """
+    Convert ellipse data to bounding box data
+    """
+    major, minor, angle, x, y = face_data
+    # So no division by zero
+    if abs(angle) < 1e-8:
+        angle = 1e-8
+    assert angle >= -np.pi / 2 and angle <= np.pi / 2, f"Angle out of range: {angle}"
+
+    t = np.arctan(-minor * np.tan(angle) / major)
+    [x1, x2] = sorted([x + major * np.cos(t) * np.cos(angle) - minor * np.sin(t) * np.sin(angle)
+                       for t in (t + np.pi, t)])
+    t = np.arctan(minor * (1 / np.tan(angle)) / major)
+    [y1, y2] = sorted([y + minor * np.sin(t) * np.cos(angle) + major * np.cos(t) * np.sin(angle)
+                       for t in (t + np.pi, t)])
+    return [x1, y1, x2, y2]
+
+
+def load_images(folds):
+    """
+    Load images from pictures_path or from cache if loaded previously
+    """
+    if os.path.exists(f"{CACHE_PATH}/images.npy"):
+        with open(f"{CACHE_PATH}/images.npy", "rb") as f:
+            images = np.load(f, allow_pickle=True)
+        return images
+    else:
+        print("Cache not found. Generating images...")
+        images = list()
+        for fold in tqdm(folds, desc="Loading images"):
+            images_in_fold = dict()
+            for path in fold:
+                img_path = f"{PICTURES_PATH}/{path}.jpg"
+                img = cv2.imread(img_path)
+                img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+                images_in_fold[path] = np.array(img)
+            images.append(images_in_fold)
+        images = np.array(images)
+        with open(f"{CACHE_PATH}/images.npy", "wb") as f:
+            np.save(f, images)
+        return images
+
+
+def show_bbox(folds, images):
+    """
+    Show bounding boxes on images
+    """
+    for index in tqdm(range(folds.size), desc="Overlaying bounding boxes"):
+        for path in folds[index]:
+            img = images[index][path]
+            for face in folds[index][path]:
+                x1, y1, x2, y2 = np.round(face).astype(int)
+                cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
+            plt.imshow(img)
+            plt.waitforbuttonpress()
+            plt.close()
+
+
 if __name__ == "__main__":
     all_folds = load_folds()
-
-    print("Done.")
+    all_images = load_images(all_folds)
+    print("Retrieved all folds.")
+    show_bbox(all_folds, all_images)
