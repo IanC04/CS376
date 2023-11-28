@@ -52,7 +52,7 @@ class AdaBoost:
 
     @classmethod
     def generate_gray_and_scaled_faces(cls, folds, images, window_size: tuple) -> (
-    np.ndarray, np.ndarray):
+            np.ndarray, np.ndarray):
         """
         Generate faces from the folds and images
         :param folds:
@@ -89,12 +89,13 @@ class AdaBoost:
             faces.append(cv2.resize(face, window_size))
 
             # See if the face is correct
-            plt.imshow(faces[i], cmap="gray")
-            plt.waitforbuttonpress()
+            # plt.imshow(faces[i], cmap="gray")
+            # plt.waitforbuttonpress()
 
             temp_img[y1:y2, x1:x2] = 0
-            non_face = temp_img
-            non_faces.extend(cls.get_windows(non_face, window_size))
+
+        non_face = temp_img
+        non_faces.extend(cls.get_windows(non_face, window_size))
         return faces, non_faces
 
     @classmethod
@@ -105,15 +106,19 @@ class AdaBoost:
         :param img:
         :return:
         """
+        # Check if face blacked out
+        # plt.imshow(img, cmap="gray")
+        # plt.waitforbuttonpress()
         non_faces = list()
-        height, width = img.shape
-        for x in range(0, width - window_size[0], window_size[0]):
-            for y in range(0, height - window_size[1], window_size[1]):
-                # TODO: Find how to generate non faces
-                non_faces.append(cv2.resize(img[y:y + window_size[1], x:x + window_size[0]],
-                                            window_size))
-                plt.imshow(non_faces[-1], cmap="gray")
-                plt.waitforbuttonpress()
+
+        img = cv2.resize(img, (window_size[0] * 2, window_size[1] * 2))
+        for x in range(0, 2):
+            for y in range(0, 2):
+                # TODO: Find how to generate non faces, currently using 4 boxes
+                non_faces.append(img[x * window_size[0]:x * window_size[0] + window_size[0],
+                                 y * window_size[1]:y * window_size[1] + window_size[1]])
+                # plt.imshow(non_faces[-1], cmap="gray")
+                # plt.waitforbuttonpress()
         return non_faces
 
     def train(self):
