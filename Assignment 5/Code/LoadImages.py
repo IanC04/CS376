@@ -21,8 +21,9 @@ def load_folds():
     if os.path.exists(f"{CACHE_PATH}/folds.npy"):
         with open(f"{CACHE_PATH}/folds.npy", "rb") as f:
             print("Cache found. Loading folds...")
-            folds = np.load(f, allow_pickle=True)
-        return folds
+            training_folds = np.load(f, allow_pickle=True)
+            testing_folds = np.load(f, allow_pickle=True)
+        return training_folds, testing_folds
     else:
         print("Cache not found. Generating folds...")
         folds = list()
@@ -55,9 +56,12 @@ def load_folds():
                         folds_data[img] = np.array(folds_data[img])
             folds.append(folds_data)
         folds = np.array(folds)
+        training_folds = folds[:8]
+        testing_folds = folds[8:]
         with open(f"{CACHE_PATH}/folds.npy", "wb") as f:
-            np.save(f, folds)
-        return folds
+            np.save(f, training_folds)
+            np.save(f, testing_folds)
+        return training_folds, testing_folds
 
 
 def get_bbox(face_data):
@@ -86,8 +90,9 @@ def load_images(folds):
     if os.path.exists(f"{CACHE_PATH}/images.npy"):
         with open(f"{CACHE_PATH}/images.npy", "rb") as f:
             print("Cache found. Loading images...")
-            images = np.load(f, allow_pickle=True)
-        return images
+            training_images = np.load(f, allow_pickle=True)
+            testing_images = np.load(f, allow_pickle=True)
+        return training_images, testing_images
     else:
         print("Cache not found. Generating images...")
         images = list()
@@ -100,9 +105,12 @@ def load_images(folds):
                 images_in_fold[path] = np.array(img)
             images.append(images_in_fold)
         images = np.array(images)
+        training_images = images[:8]
+        testing_images = images[8:]
         with open(f"{CACHE_PATH}/images.npy", "wb") as f:
-            np.save(f, images)
-        return images
+            np.save(f, training_images)
+            np.save(f, testing_images)
+        return training_images, testing_images
 
 
 def show_bbox(folds, images):
@@ -121,7 +129,7 @@ def show_bbox(folds, images):
 
 
 if __name__ == "__main__":
-    all_folds = load_folds()
-    all_images = load_images(all_folds)
-    print("Retrieved all folds.")
-    show_bbox(all_folds, all_images)
+    tr_folds, te_folds = load_folds()
+    tr_images, te_images = load_images(np.concatenate((tr_folds, te_folds)))
+    print("Retrieved all FDDB data.")
+    show_bbox(np.concatenate((tr_folds, te_folds)), np.concatenate((tr_images, te_images)))
