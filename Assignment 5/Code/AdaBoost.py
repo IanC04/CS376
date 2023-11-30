@@ -92,16 +92,14 @@ class AdaBoost:
             # plt.imshow(faces[i], cmap="gray")
             # plt.waitforbuttonpress()
 
-            temp_img[y1:y2, x1:x2] = 0
-
         non_face = temp_img
-        non_faces.extend(cls.get_windows(non_face, window_size))
+        non_faces.extend(cls.get_non_faces(non_face, window_size))
         return faces, non_faces
 
     @classmethod
-    def get_windows(cls, img, window_size: tuple) -> list:
+    def get_non_faces(cls, img, window_size: tuple) -> list:
         """
-        Get the non faces from the fold and image
+        Get the non faces from the fold and image, get windows where minimal face is shown
         :param fold:
         :param img:
         :return:
@@ -114,7 +112,7 @@ class AdaBoost:
         img = cv2.resize(img, (window_size[0] * 2, window_size[1] * 2))
         for x in range(0, 2):
             for y in range(0, 2):
-                # TODO: Find how to generate non faces, currently using 4 boxes
+                # TODO: Non face is sections where not face is shown
                 non_faces.append(img[x * window_size[0]:x * window_size[0] + window_size[0],
                                  y * window_size[1]:y * window_size[1] + window_size[1]])
                 # plt.imshow(non_faces[-1], cmap="gray")
