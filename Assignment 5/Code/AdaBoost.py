@@ -64,6 +64,9 @@ class AdaBoost:
         for index in tqdm(range(len(folds)), desc="Generating faces"):
             for img_name in images[index].keys():
                 img = cls.rgb2gray(images[index][img_name])
+                print(img_name)
+                if img_name == "2002/07/19/big/img_581":
+                    pass
                 faces, non_faces = cls.get_faces(folds[index][img_name], img, window_size)
                 all_faces.extend(faces)
                 all_non_faces.extend(non_faces)
@@ -82,39 +85,69 @@ class AdaBoost:
         """
         temp_img = img.copy()
         faces, non_faces = list(), list()
+        face_coord = None
         for i, fold in enumerate(folds):
-            # Convert [x1, y1, x2, y2] to int([y1, x1, y2, x2])
+            # Convert [x1, y1, x2, y2] to int([x1, y1, x2, y2])
             x1, y1, x2, y2 = int(fold[0]), int(fold[1]), int(fold[2]), int(fold[3])
+            x1, y1, x2, y2 = max(x1, 0), max(y1, 0), min(x2, img.shape[1]), min(y2, img.shape[0])
+
+            # Convert to row:column [y1, x1, y2, x2]
             face = temp_img[y1:y2, x1:x2]
             faces.append(cv2.resize(face, window_size))
+
+            # Face coordinates
+            face_coord = np.array([x1, y1, x2, y2])
 
             # See if the face is correct
             # plt.imshow(faces[i], cmap="gray")
             # plt.waitforbuttonpress()
 
-        non_face = temp_img
-        non_faces.extend(cls.get_non_faces(non_face, window_size))
+        if len(folds) < 2:
+            non_face = temp_img
+            non_faces.extend(cls.get_non_faces(non_face, window_size, face_coord))
         return faces, non_faces
 
     @classmethod
-    def get_non_faces(cls, img, window_size: tuple) -> list:
+    def get_non_faces(cls, img, window_size: tuple, face) -> list:
         """
         Get the non faces from the fold and image, get windows where minimal face is shown
         :param fold:
         :param img:
+        :param window_size:
+        :param face: [x1, y1, x2, y2]
         :return:
         """
         # Check if face blacked out
-        # plt.imshow(img, cmap="gray")
-        # plt.waitforbuttonpress()
+        plt.imshow(img, cmap="gray")
+        plt.waitforbuttonpress()
         non_faces = list()
 
+        scale_x, scale_y = window_size[0] * 2 / img.shape[0], window_size[1] * 2 / img.shape[1]
         img = cv2.resize(img, (window_size[0] * 2, window_size[1] * 2))
+
+        # Rounding issue?
+        f_x1, f_y1, f_x2, f_y2 = np.round(face * [scale_x, scale_y, scale_x, scale_y]).astype(int)
+
+        cv2.rectangle(img, (f_x1, f_y1), (f_x2, f_y2), (255, 0, 0), 2)
+        plt.imshow(img, cmap="gray")
+        plt.waitforbuttonpress()
         for x in range(0, 2):
             for y in range(0, 2):
+                if face is not None:
+                    xi1, yi1, xi2, yi2 = (max(x * window_size[0], f_x1), max(y * window_size[
+                        1], f_y1), min(x * window_size[0] + window_size[0], f_x2),
+                                          min(y * window_size[1] + window_size[1], f_y2))
+                    width = xi2 - xi1
+                    height = yi2 - yi1
+                    face_percentage = width * height / (window_size[0] * window_size[1])
+                    print(f"Face Percentage: {face_percentage}, Width: {width}, Height: {height}")
+                    if (width > 0 and height > 0) and face_percentage > 0.1:
+                        continue
+
                 # TODO: Non face is sections where not face is shown
-                non_faces.append(img[x * window_size[0]:x * window_size[0] + window_size[0],
-                                 y * window_size[1]:y * window_size[1] + window_size[1]])
+                non_face = img[y * window_size[1]:y * window_size[1] + window_size[1],
+                           x * window_size[0]:x * window_size[0] + window_size[0]]
+                non_faces.append(non_face)
                 # plt.imshow(non_faces[-1], cmap="gray")
                 # plt.waitforbuttonpress()
         return non_faces
@@ -140,6 +173,27 @@ class AdaBoost:
         Predict the faces in the images
         """
         pass
+
+    def save(self):
+        """
+        Save the model
+        """
+        import pickle
+        with open(f"{LoadImages.CACHE_PATH}/model.pkl", "wb") as f:
+            print("Saving model...")
+            pickle.dump(self, f)
+        del pickle
+
+    def load(self):
+        """
+        Load the model
+        """
+        import pickle
+        with open(f"{LoadImages.CACHE_PATH}/model.pkl", "rb") as f:
+            print("Loading model...")
+            model = pickle.load(f)
+        del pickle
+        return model
 
     @classmethod
     def generate_integral_images(cls, file_name, imgs: np.ndarray) -> np.ndarray:

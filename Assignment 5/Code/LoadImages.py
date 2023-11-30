@@ -113,19 +113,30 @@ def load_images(folds):
         return training_images, testing_images
 
 
-def show_bbox(folds, images):
+def show_bbox(folds, images, paths=None):
     """
     Show bounding boxes on images
     """
-    for index in tqdm(range(folds.size), desc="Overlaying bounding boxes"):
-        for path in folds[index]:
-            img = images[index][path]
-            for face in folds[index][path]:
-                x1, y1, x2, y2 = np.round(face).astype(int)
-                cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
-            plt.imshow(img)
-            plt.waitforbuttonpress()
-            plt.close()
+    if paths is None:
+        for index in tqdm(range(folds.size), desc="Overlaying bounding boxes"):
+            for path in folds[index]:
+                img = images[index][path]
+                for face in folds[index][path]:
+                    x1, y1, x2, y2 = np.round(face).astype(int)
+                    cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
+                plt.imshow(img)
+                plt.waitforbuttonpress()
+                plt.close()
+    else:
+        for index in tqdm(range(folds.size), desc="Overlaying bounding boxes for specific images"):
+            for path in paths:
+                img = images[index][path]
+                for face in folds[index][path]:
+                    x1, y1, x2, y2 = np.round(face).astype(int)
+                    cv2.rectangle(img, (x1, y1), (x2, y2), (255, 0, 0), 2)
+                plt.imshow(img)
+                plt.waitforbuttonpress()
+                plt.close()
 
 
 if __name__ == "__main__":
