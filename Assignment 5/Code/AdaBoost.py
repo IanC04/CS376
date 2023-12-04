@@ -7,6 +7,7 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
+import timeit
 
 import LoadImages
 
@@ -74,6 +75,7 @@ class AdaBoost:
         self.testing_face_haar_features, self.testing_non_face_haar_features = (
             self.get_haar_features("testing", self.haar_indices_subset, self.testing_face_iimages,
                                    self.testing_non_face_iimages))
+        self.strong_classifier = None
 
     @classmethod
     def generate_gray_and_scaled_faces(cls, file_name, folds, images, window_size: tuple) -> (
@@ -199,17 +201,111 @@ class AdaBoost:
         """
         Train the model
         """
+        if os.path.isfile(f"{LoadImages.CACHE_PATH}/strong_classifier.npy"):
+            with open(f"{LoadImages.CACHE_PATH}/strong_classifier.npy", "rb") as f:
+                print(f"Cache found. Loading Strong Classifier...")
+                self.strong_classifier = np.load(f)
+        else:
+            # Initialize weights
+            m = self.training_face_haar_features.shape[0]
+            l = self.training_non_face_haar_features.shape[0]
+            training_features = np.concatenate((self.training_face_haar_features,
+                                                self.training_non_face_haar_features))
+            training_labels = np.concatenate((np.ones(m), np.zeros(l)))
 
-        pass
+            weights = np.array([1 / (2 * m) for _ in range(m)] + [1 / (2 * l) for _ in range(l)])
 
-    def get_best_features(self, amount):
+            # Strong classifier
+            strong_classifier = list()
+
+            for _ in tqdm(range(200), desc="Training strong classifier", position=0):
+                # Normalize weights
+                weights /= np.sum(weights)
+
+                # Get best feature
+                best_weak_classifier = self.get_best_feature(training_labels, training_features,
+                                                             weights)
+                strong_classifier.append(best_weak_classifier)
+
+            self.strong_classifier = np.array(strong_classifier)
+            with open(f"{LoadImages.CACHE_PATH}/strong_classifier.npy", "wb") as f:
+                np.save(f, self.strong_classifier)
+                print(f"Saved Strong Classifier to Cache")
+
+    def get_best_feature(self, labels, all_features, weights):
         """
-        Get the best features from the images
+        Get the best feature from the images
         Section 3 of AdaBoost paper employs an AdaBoosting algorithm
         to select the best features
-        :param amount:
+        :param labels:
+        :param all_features:
+        :param weights:
         :return:
         """
+        weak_classifier = DecisionStump()
+        # Get the best feature
+        for idx in tqdm(range(len(all_features[0])), desc="Getting best feature", position=1,
+                        leave=False):
+            feature = all_features[:, idx].flatten()
+            self.train_weak_classifier(weak_classifier, labels, feature, idx, weights)
+
+        beta = weak_classifier.error / (1 - weak_classifier.error)
+        assert 0 < beta < 1, f"Beta is {beta} for feature: {weak_classifier.feature_index}"
+        weak_classifier.alpha = -np.log(1 / beta)
+        assert weak_classifier.valid(), f"Weak Classifier is not valid: {weak_classifier}"
+
+        # Update weights
+        predictions = np.zeros(len(all_features))
+        predictions[weak_classifier.parity * all_features[:, weak_classifier.feature_index] <
+                    weak_classifier.parity * weak_classifier.threshold] = 1
+
+        weights[predictions == labels] *= beta
+        assert weights.all() >= 0, f"Weights are not greater than 0: {weights}"
+
+        return weak_classifier
+
+    def train_weak_classifier(self, classifier, labels, feature, feature_index, weights):
+        """
+        Train the weak classifier
+        :param classifier:
+        :param labels:
+        :param feature:
+        :param feature_index:
+        :param weights:
+        :return:
+        """
+        # Get the best threshold
+        thresholds = np.unique(feature)
+        min_threshold, max_threshold = np.min(thresholds), np.max(thresholds)
+
+        # start = timeit.timeit()
+        N = 100
+        for percent in range(N):
+            parity = 1
+            threshold = min_threshold + percent * (max_threshold - min_threshold) / N
+            predictions = np.zeros(len(feature))
+            predictions[feature < threshold] = 1
+            error = np.sum(weights[predictions != labels])
+
+            if error > 0.5:
+                error = 1 - error
+                parity = -1
+            assert 0 < error <= 0.5, (
+                f"Error is not in [0, 0.5]: {error} for feature: {feature_index}")
+            if error < classifier.error:
+                classifier.parity = parity
+                classifier.feature_index = feature_index
+                classifier.threshold = threshold
+                classifier.error = error
+
+        # end = timeit.timeit()
+        # print(end - start)
+
+    def test(self):
+        """
+        Test the model
+        """
+        self.predict()
         pass
 
     def predict(self):
@@ -499,12 +595,29 @@ class DecisionStump:
     """
     Decision Stump class
     """
+
     def __init__(self):
-        self.parity = 1
-        self.feature_index = 0
-        self.threshold = 0
-        self.error = 0
-        self.alpha = 0
+        self.parity = None
+        self.feature_index = None
+        self.threshold = np.inf
+        self.error = np.inf
+        self.alpha = np.inf
+
+    def valid(self):
+        """
+        Check if the decision stump is valid
+        :return:
+        """
+        return (self.parity is not None and self.feature_index is not None and self.threshold !=
+                np.inf and self.error != np.inf and self.alpha != np.inf)
+
+    def __str__(self):
+        """
+        String representation of the Decision Stump
+        :return:
+        """
+        return f"DecisionStump(parity={self.parity}, feature_index={self.feature_index}, " \
+               f"threshold={self.threshold}, error={self.error}, alpha={self.alpha})"
 
 
 if __name__ == "__main__":
