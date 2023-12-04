@@ -43,6 +43,8 @@ class AdaBoost:
         self.original_testing_folds = testing_folds
         self.original_testing_images = testing_images
         self.window_size = window_size
+
+        # Stored with the format: (y1, x1, y2, x2)
         self.haar_indices = self.generate_haar_indicies(self.window_size)
         self.haar_indices_subset = self.generate_haar_indices_subset(self.haar_indices)
 
@@ -72,7 +74,6 @@ class AdaBoost:
         self.testing_face_haar_features, self.testing_non_face_haar_features = (
             self.get_haar_features("testing", self.haar_indices_subset, self.testing_face_iimages,
                                    self.testing_non_face_iimages))
-        pass
 
     @classmethod
     def generate_gray_and_scaled_faces(cls, file_name, folds, images, window_size: tuple) -> (
@@ -87,13 +88,13 @@ class AdaBoost:
         """
         if os.path.exists(f"{LoadImages.CACHE_PATH}/{file_name}_faces_and_non_faces.npy"):
             with open(f"{LoadImages.CACHE_PATH}/{file_name}_faces_and_non_faces.npy", "rb") as f:
-                print("Cache found. Loading faces...")
+                print(f"Cache found. Loading {file_name} faces...")
                 all_faces = np.load(f, allow_pickle=True)
-                print("Cache found. Loading non faces...")
+                print(f"Cache found. Loading {file_name} non faces...")
                 all_non_faces = np.load(f, allow_pickle=True)
             return all_faces, all_non_faces
         else:
-            print("Cache not found. Generating faces...")
+            print(f"Cache not found. Generating {file_name} faces...")
             all_faces = list()
             all_non_faces = list()
             for index in tqdm(range(len(folds)), desc="Generating faces"):
@@ -198,6 +199,7 @@ class AdaBoost:
         """
         Train the model
         """
+
         pass
 
     def get_best_features(self, amount):
@@ -238,12 +240,12 @@ class AdaBoost:
         """
         if os.path.exists(f"{LoadImages.CACHE_PATH}/{file_name}_integral_images.npy"):
             with open(f"{LoadImages.CACHE_PATH}/{file_name}_integral_images.npy", "rb") as f:
-                print("Cache found. Loading integral images...")
+                print(f"Cache found. Loading {file_name} integral images...")
                 face_integral_images = np.load(f, allow_pickle=True)
                 non_face_integral_images = np.load(f, allow_pickle=True)
                 return face_integral_images, non_face_integral_images
         else:
-            print("Cache not found. Generating integral images...")
+            print(f"Cache not found. Generating {file_name} integral images...")
             face_integral_images = cls.convert_to_integral(face_imgs)
             non_face_integral_images = cls.convert_to_integral(non_face_imgs)
 
@@ -278,7 +280,7 @@ class AdaBoost:
     @classmethod
     def get_integral_image(cls, img: np.ndarray) -> np.ndarray:
         """
-        Get the integral image from an image
+        Get the integral image from a grayscale image
         :param img: GRAYSCALE image that should already be scaled to the window size
         :return:
         """
@@ -298,7 +300,7 @@ class AdaBoost:
         four_piece = []
         if os.path.isfile(f"{LoadImages.CACHE_PATH}/all_haar_indices.npy"):
             with open(f"{LoadImages.CACHE_PATH}/all_haar_indices.npy", 'rb') as f:
-                print("Cache found. Loading Haar Indices...")
+                print(f"Cache found. Loading Haar Indices...")
                 two_piece = np.load(f)
                 three_piece = np.load(f)
                 four_piece = np.load(f)
@@ -344,7 +346,7 @@ class AdaBoost:
                 np.save(f, two_piece)
                 np.save(f, three_piece)
                 np.save(f, four_piece)
-                print("Saved Haar Indices to Cache")
+                print(f"Saved Haar Indices to Cache")
         return two_piece, three_piece, four_piece
 
     @classmethod
@@ -358,13 +360,13 @@ class AdaBoost:
         """
         if os.path.isfile(f"{LoadImages.CACHE_PATH}/haar_indices_subset.npy"):
             with open(f"{LoadImages.CACHE_PATH}/haar_indices_subset.npy", 'rb') as f:
-                print("Cache found. Loading Haar Indices Subset...")
+                print(f"Cache found. Loading Haar Indices Subset...")
                 two_piece_subset = np.load(f)
                 three_piece_subset = np.load(f)
                 four_piece_subset = np.load(f)
                 return two_piece_subset, three_piece_subset, four_piece_subset
         else:
-            print("Cache not found. Generating Haar Indices Subset...")
+            print(f"Cache not found. Generating Haar Indices Subset...")
             two_piece, three_piece, four_piece = haar_indices
 
             generator = np.random.default_rng()
@@ -379,13 +381,13 @@ class AdaBoost:
                 np.save(f, two_piece_subset)
                 np.save(f, three_piece_subset)
                 np.save(f, four_piece_subset)
-                print("Saved Haar Indices Subset to Cache")
+                print(f"Saved Haar Indices Subset to Cache")
             return two_piece_subset, three_piece_subset, four_piece_subset
 
     @classmethod
     def display_haar_rectangles(cls, img, features):
         """
-        Display the haar rectangles, currently only supports 2 piece haar features
+        Display the haar rectangles, currently only supports two-piece haar features
         :param img:
         :param features:
         :return:
@@ -398,12 +400,12 @@ class AdaBoost:
             plt.waitforbuttonpress()
 
     @classmethod
-    def get_haar_features(cls, file_name, haar_features, face_iimages, non_face_iimages) -> tuple[
-        np.ndarray, np.ndarray]:
+    def get_haar_features(cls, file_name, haar_indices_subset, face_iimages, non_face_iimages) -> \
+            tuple[np.ndarray, np.ndarray]:
         """
         Get the haar features from the images
         :param file_name:
-        :param haar_features:
+        :param haar_indices_subset:
         :param face_iimages:
         :param non_face_iimages:
         :return:
@@ -411,23 +413,98 @@ class AdaBoost:
 
         if os.path.exists(f"{LoadImages.CACHE_PATH}/{file_name}_haar_features.npy"):
             with open(f"{LoadImages.CACHE_PATH}/{file_name}_haar_features.npy", "rb") as f:
-                print("Cache found. Loading Haar Features...")
+                print(f"Cache found. Loading {file_name} Haar Features...")
                 face_haar_features = np.load(f, allow_pickle=True)
                 non_face_haar_features = np.load(f, allow_pickle=True)
                 return face_haar_features, non_face_haar_features
         else:
-            print("Cache not found. Generating Haar Features...")
+            print(f"Cache not found. Generating {file_name} Haar Features...")
 
-            for i in tqdm(range(len(haar_features)), desc="Getting Haar Features"):
-                # TODO
-                face_haar_features = cls.get_haar_features_helper(haar_features, face_iimages)
-                non_face_haar_features = cls.get_haar_features_helper(haar_features, non_face_iimages)
-
+            face_haar_features = cls.get_haar_features_helper(haar_indices_subset, face_iimages)
+            non_face_haar_features = cls.get_haar_features_helper(haar_indices_subset,
+                                                                  non_face_iimages)
+            assert face_haar_features is not None and non_face_haar_features is not None, \
+                "Haar Features not generated"
             with open(f"{LoadImages.CACHE_PATH}/{file_name}_haar_features.npy", "wb") as f:
                 np.save(f, face_haar_features)
                 np.save(f, non_face_haar_features)
-                print("Saved Haar Features to Cache")
+                print(f"Saved {file_name} Haar Features to Cache")
             return face_haar_features, non_face_haar_features
+
+    @classmethod
+    def get_haar_features_helper(cls,
+                                 haar_indices_subset: tuple[np.ndarray, np.ndarray, np.ndarray],
+                                 iimages: np.ndarray) -> np.ndarray:
+        """
+        Helper function for get_haar_features
+        :param haar_indices_subset:
+        :param iimages:
+        :return:
+        """
+        haar_features = np.zeros((len(iimages), sum([arr.shape[0] for arr in haar_indices_subset])))
+
+        feature = None
+        for img_idx, ii in tqdm(enumerate(iimages), desc=f"Computing Haar Features"):
+            coord_idx = 0
+            for coord_type in haar_indices_subset:
+                for coord_set in coord_type:
+                    # 2 Rectangles
+                    if len(coord_set) == 8:
+                        rect1 = cls.area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
+                        rect2 = cls.area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
+                        feature = rect2 - rect1
+                    # 3 Rectangles
+                    elif len(coord_set) == 12:
+                        rect1 = cls.area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
+                        rect2 = cls.area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
+                        rect3 = cls.area(ii, coord_set[8], coord_set[9], coord_set[10],
+                                         coord_set[11])
+                        feature = rect2 - rect1 - rect3
+                    # 4 Rectangles
+                    elif len(coord_set) == 16:
+                        rect1 = cls.area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
+                        rect2 = cls.area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
+                        rect3 = cls.area(ii, coord_set[8], coord_set[9], coord_set[10],
+                                         coord_set[11])
+                        rect4 = cls.area(ii, coord_set[12], coord_set[13], coord_set[14],
+                                         coord_set[15])
+                        feature = rect2 + rect4 - rect1 - rect3
+                    else:
+                        AssertionError(f"Invalid Haar Feature: {coord_set}")
+                    haar_features[img_idx, coord_idx] = feature
+
+                    coord_idx += 1
+        haar_features = np.array(haar_features)
+        return haar_features
+
+    @classmethod
+    def area(cls, ii, y1, x1, y2, x2):
+        """
+        Get the area of the integral image
+        :param ii:
+        :param y1:
+        :param x1:
+        :param y2:
+        :param x2:
+        :return:
+        """
+        br = ii[y2, x2]
+        tl = ii[y1 - 1, x1 - 1] if x1 > 0 and y1 > 0 else 0
+        tr = ii[y1 - 1, x2] if y1 > 0 else 0
+        bl = ii[y2, x1 - 1] if x1 > 0 else 0
+        return (br + tl) - (tr + bl)
+
+
+class DecisionStump:
+    """
+    Decision Stump class
+    """
+    def __init__(self):
+        self.parity = 1
+        self.feature_index = 0
+        self.threshold = 0
+        self.error = 0
+        self.alpha = 0
 
 
 if __name__ == "__main__":
