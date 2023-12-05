@@ -255,8 +255,8 @@ class AdaBoost:
             feature = all_features[:, idx].flatten()
             sum_non_face_weights = np.sum(weights[labels == 0])
             sum_face_weights = np.sum(weights[labels == 1])
-            (self.train_weak_classifier(weak_classifier, labels, feature, idx, weights,
-                                        sum_non_face_weights, sum_face_weights))
+            self.train_weak_classifier(weak_classifier, labels, feature, idx, weights,
+                                       sum_non_face_weights, sum_face_weights)
 
         beta = weak_classifier.error / (1 - weak_classifier.error)
         assert 0 < beta < 1, f"Beta is {beta} for feature: {weak_classifier.feature_index}"
@@ -273,10 +273,11 @@ class AdaBoost:
 
         return weak_classifier
 
-    def train_weak_classifier(self, labels, feature, feature_index, weights,
+    def train_weak_classifier(self, classifier, labels, feature, feature_index, weights,
                               total_neg_weights, total_pos_weights):
         """
         Train the weak classifier by getting the best threshold
+        :param classifier:
         :param labels:
         :param feature:
         :param feature_index:
@@ -286,8 +287,6 @@ class AdaBoost:
         :return:
         """
         # start = timeit.timeit()
-
-        classifier = DecisionStump()
         # Get the best threshold using optimized algorithm
         sorted_data = np.array(sorted(zip(feature, labels, weights), key=lambda x: x[0]))
 
@@ -320,10 +319,8 @@ class AdaBoost:
             else:
                 pos_seen += 1
                 sum_pos_weights += w
-
         # end = timeit.timeit()
         # print(end - start)
-        return classifier
 
     def get_best_weak_classifier(self, weak_classifiers):
         """
