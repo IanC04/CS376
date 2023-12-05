@@ -198,11 +198,11 @@ class AdaBoost:
                 # plt.waitforbuttonpress()
         return non_faces
 
-    def train(self, number_of_classifiers=200):
+    def train(self, number_of_classifiers=10):
         """
         Train the model
-        511=2^9-1
-        :param number_of_classifiers: TODO: Change to 200 if overcomplete
+        TODO: 511=2^9-1 or 127=2^7-1
+        :param number_of_classifiers:
         """
         if os.path.isfile(f"{LoadImages.CACHE_PATH}/strong_classifier.npy"):
             with open(f"{LoadImages.CACHE_PATH}/strong_classifier.npy", "rb") as f:
@@ -273,24 +273,27 @@ class AdaBoost:
 
         return weak_classifier
 
-    def train_weak_classifier(self, classifier, labels, feature, feature_index, weights,
+    def train_weak_classifier(self, labels, feature, feature_index, weights,
                               total_neg_weights, total_pos_weights):
         """
         Train the weak classifier by getting the best threshold
-        :param classifier:
         :param labels:
         :param feature:
         :param feature_index:
         :param weights:
+        :param total_neg_weights:
+        :param total_pos_weights:
         :return:
         """
         # start = timeit.timeit()
 
+        classifier = DecisionStump()
         # Get the best threshold using optimized algorithm
         sorted_data = np.array(sorted(zip(feature, labels, weights), key=lambda x: x[0]))
 
         neg_seen, pos_seen = 0, 0
         sum_neg_weights, sum_pos_weights = 0, 0
+        parity = 1
         for f, l, w in sorted_data:
             # Amount of misclassified weights
             error = min(sum_neg_weights + (total_pos_weights - sum_pos_weights),
@@ -320,6 +323,19 @@ class AdaBoost:
 
         # end = timeit.timeit()
         # print(end - start)
+        return classifier
+
+    def get_best_weak_classifier(self, weak_classifiers):
+        """
+        Get the best weak classifier
+        :param weak_classifiers:
+        :return:
+        """
+        best_weak_classifier = weak_classifiers[0]
+        for weak_classifier in weak_classifiers:
+            if weak_classifier.unweighted_error < best_weak_classifier.unweighted_error:
+                best_weak_classifier = weak_classifier
+        return best_weak_classifier
 
     def test_classification(self):
         """
@@ -334,15 +350,18 @@ class AdaBoost:
                                          np.zeros(len(self.testing_non_face_haar_features))))
         testing_features = np.concatenate((self.testing_face_haar_features,
                                            self.testing_non_face_haar_features))
+        sum_alpha = sum([classifier.alpha for classifier in self.strong_classifier])
+
         for idx, img_features in tqdm(enumerate(testing_features), desc="Testing"):
-            has_face = self.predict(img_features)
+            has_face = self.predict(img_features, sum_alpha)
             correct_prediction = has_face == correct_labels[idx]
             if correct_prediction:
                 correct += 1
-                predictions[idx] = 1
             else:
                 incorrect += 1
-                predictions[idx] = 0
+            predictions[idx] = has_face
+            # if idx >= 1035:
+            #     pass
             # plt.imshow(original_images[idx], cmap="gray")
             # plt.waitforbuttonpress()
             print(f"Image {idx} {'' if correct_prediction else 'in'}correctly classified")
@@ -358,6 +377,8 @@ class AdaBoost:
         original_images = self.original_testing_images
         original_images = list(original_images[0].values()) + list(original_images[1].values())
 
+        sum_alpha = sum([classifier.alpha for classifier in self.strong_classifier])
+
         for idx, img in tqdm(enumerate(original_images), desc="Testing"):
             for window_size in range(self.window_size[0], min(img.shape[0], img.shape[1])):
                 for x in range(0, img.shape[0] - window_size, 2):
@@ -368,7 +389,7 @@ class AdaBoost:
                         img_haar_features = self.get_haar_features_helper(self.haar_indices_subset,
                                                                           window_iimage,
                                                                           single_iimage=True)
-                        has_face = self.predict(img_haar_features)
+                        has_face = self.predict(img_haar_features, sum_alpha)
                         if has_face:
                             img_copy = img.copy()
                             cv2.rectangle(img_copy, (x, y),
@@ -380,19 +401,17 @@ class AdaBoost:
                                 f"Face in image {idx} with bbox: "
                                 f"{(x, y, x + self.window_size[0], y + self.window_size[1])}")
 
-    def predict(self, features):
+    def predict(self, features, sum_alpha):
         """
         Predict the faces in the images
         :param features:
+        :param sum_alpha:
         """
         sum_alpha_h = 0
-        sum_alpha = 0
         for classifier in self.strong_classifier:
             if classifier.parity * features[classifier.feature_index] < classifier.parity * \
                     classifier.threshold:
                 sum_alpha_h += classifier.alpha
-
-            sum_alpha += classifier.alpha
         return sum_alpha_h >= 0.5 * sum_alpha
 
     def save(self):
@@ -404,6 +423,26 @@ class AdaBoost:
             print("Saving model...")
             pickle.dump(self, f)
         del pickle
+
+    def show_features(self):
+        """
+        Show the features
+        :return:
+        """
+        features = list()
+
+        for classifier in self.strong_classifier:
+            if classifier.feature_index < len(self.haar_indices_subset[0]):
+                feature = self.haar_indices_subset[0][classifier.feature_index]
+            elif classifier.feature_index < len(self.haar_indices_subset[0]) + len(
+                    self.haar_indices_subset[1]):
+                feature = self.haar_indices_subset[1][classifier.feature_index - len(
+                    self.haar_indices_subset[0])]
+            else:
+                feature = self.haar_indices_subset[2][classifier.feature_index - len(
+                    self.haar_indices_subset[0]) - len(self.haar_indices_subset[1])]
+            features.append(feature)
+        self.display_haar_rectangles(self.training_faces[0], features)
 
     @classmethod
     def generate_integral_images(cls, file_name, face_imgs: np.ndarray,
@@ -746,6 +785,6 @@ if __name__ == "__main__":
         model = AdaBoost(tr_folds, tr_images, te_folds, te_images, window_size=(24, 24))
         model.train()
         model.save()
-    model.show_haar_rectangles()
+    # model.show_features()
     model.test_classification()
     # model.test_detection()
