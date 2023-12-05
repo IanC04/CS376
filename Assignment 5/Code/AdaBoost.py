@@ -7,12 +7,11 @@ import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 from tqdm import tqdm
-import timeit
 
 import LoadImages
 
 
-def load():
+def load_model():
     """
     Load the model
     """
@@ -75,6 +74,8 @@ class AdaBoost:
         self.testing_face_haar_features, self.testing_non_face_haar_features = (
             self.get_haar_features("testing", self.haar_indices_subset, self.testing_face_iimages,
                                    self.testing_non_face_iimages))
+
+        # Initialized after training
         self.strong_classifier = None
 
     @classmethod
@@ -102,7 +103,7 @@ class AdaBoost:
             for index in tqdm(range(len(folds)), desc="Generating faces"):
                 for img_name in images[index].keys():
                     img = cls.rgb2gray(images[index][img_name])
-                    print(img_name)
+                    # print(img_name)
                     faces, non_faces = cls.get_faces_and_non_faces(folds[index][img_name], img,
                                                                    window_size)
                     all_faces.extend(faces)
@@ -197,32 +198,37 @@ class AdaBoost:
                 # plt.waitforbuttonpress()
         return non_faces
 
-    def train(self):
+    def train(self, number_of_classifiers=200):
         """
         Train the model
+        511=2^9-1
+        :param number_of_classifiers: TODO: Change to 200 if overcomplete
         """
         if os.path.isfile(f"{LoadImages.CACHE_PATH}/strong_classifier.npy"):
             with open(f"{LoadImages.CACHE_PATH}/strong_classifier.npy", "rb") as f:
                 print(f"Cache found. Loading Strong Classifier...")
-                self.strong_classifier = np.load(f)
+                self.strong_classifier = np.load(f, allow_pickle=True)
         else:
             # Initialize weights
-            m = self.training_face_haar_features.shape[0]
-            l = self.training_non_face_haar_features.shape[0]
-            training_features = np.concatenate((self.training_face_haar_features,
-                                                self.training_non_face_haar_features))
-            training_labels = np.concatenate((np.ones(m), np.zeros(l)))
+            non_faces = self.training_non_face_haar_features.shape[0]
+            faces = self.training_face_haar_features.shape[0]
+            training_features = np.concatenate((self.training_non_face_haar_features,
+                                                self.training_face_haar_features))
+            training_labels = np.concatenate((np.zeros(non_faces), np.ones(faces)))
 
-            weights = np.array([1 / (2 * m) for _ in range(m)] + [1 / (2 * l) for _ in range(l)])
+            weights = np.array(
+                [1 / (2 * non_faces) for _ in range(non_faces)] + [1 / (2 * faces) for _ in
+                                                                   range(faces)])
 
             # Strong classifier
             strong_classifier = list()
 
-            for _ in tqdm(range(200), desc="Training strong classifier", position=0):
+            for _ in tqdm(range(number_of_classifiers), desc="Training strong classifier",
+                          position=0):
                 # Normalize weights
                 weights /= np.sum(weights)
 
-                # Get best feature
+                # Get the best feature
                 best_weak_classifier = self.get_best_feature(training_labels, training_features,
                                                              weights)
                 strong_classifier.append(best_weak_classifier)
@@ -247,7 +253,10 @@ class AdaBoost:
         for idx in tqdm(range(len(all_features[0])), desc="Getting best feature", position=1,
                         leave=False):
             feature = all_features[:, idx].flatten()
-            self.train_weak_classifier(weak_classifier, labels, feature, idx, weights)
+            sum_non_face_weights = np.sum(weights[labels == 0])
+            sum_face_weights = np.sum(weights[labels == 1])
+            (self.train_weak_classifier(weak_classifier, labels, feature, idx, weights,
+                                        sum_non_face_weights, sum_face_weights))
 
         beta = weak_classifier.error / (1 - weak_classifier.error)
         assert 0 < beta < 1, f"Beta is {beta} for feature: {weak_classifier.feature_index}"
@@ -264,9 +273,10 @@ class AdaBoost:
 
         return weak_classifier
 
-    def train_weak_classifier(self, classifier, labels, feature, feature_index, weights):
+    def train_weak_classifier(self, classifier, labels, feature, feature_index, weights,
+                              total_neg_weights, total_pos_weights):
         """
-        Train the weak classifier
+        Train the weak classifier by getting the best threshold
         :param classifier:
         :param labels:
         :param feature:
@@ -274,45 +284,116 @@ class AdaBoost:
         :param weights:
         :return:
         """
-        # Get the best threshold
-        thresholds = np.unique(feature)
-        min_threshold, max_threshold = np.min(thresholds), np.max(thresholds)
-
         # start = timeit.timeit()
-        N = 100
-        for percent in range(N):
-            parity = 1
-            threshold = min_threshold + percent * (max_threshold - min_threshold) / N
-            predictions = np.zeros(len(feature))
-            predictions[feature < threshold] = 1
-            error = np.sum(weights[predictions != labels])
 
-            if error > 0.5:
-                error = 1 - error
-                parity = -1
+        # Get the best threshold using optimized algorithm
+        sorted_data = np.array(sorted(zip(feature, labels, weights), key=lambda x: x[0]))
+
+        neg_seen, pos_seen = 0, 0
+        sum_neg_weights, sum_pos_weights = 0, 0
+        for f, l, w in sorted_data:
+            # Amount of misclassified weights
+            error = min(sum_neg_weights + (total_pos_weights - sum_pos_weights),
+                        sum_pos_weights + (total_neg_weights - sum_neg_weights))
+
+            # # Equivalent to above
+            # error_2 = sum_neg_weights + (total_pos_weights - sum_pos_weights)
+            # if error_2 > 0.5:
+            #     error_2 = 1 - error_2
+            #     parity_2 = -1
+            # assert error == error_2, f"Error is not equal: {error} != {error_2}"
+
             assert 0 < error <= 0.5, (
                 f"Error is not in [0, 0.5]: {error} for feature: {feature_index}")
             if error < classifier.error:
-                classifier.parity = parity
+                classifier.parity = 1 if pos_seen > neg_seen else 0
                 classifier.feature_index = feature_index
-                classifier.threshold = threshold
+                classifier.threshold = f
                 classifier.error = error
+
+            if l == 0:
+                neg_seen += 1
+                sum_neg_weights += w
+            else:
+                pos_seen += 1
+                sum_pos_weights += w
 
         # end = timeit.timeit()
         # print(end - start)
 
-    def test(self):
+    def test_classification(self):
         """
         Test the model
         """
-        self.predict()
-        pass
 
-    def predict(self):
+        correct, incorrect = 0, 0
+        predictions = np.zeros(
+            len(self.testing_face_haar_features) + len(self.testing_non_face_haar_features))
+        original_images = np.concatenate((self.testing_faces, self.testing_non_faces))
+        correct_labels = np.concatenate((np.ones(len(self.testing_face_haar_features)),
+                                         np.zeros(len(self.testing_non_face_haar_features))))
+        testing_features = np.concatenate((self.testing_face_haar_features,
+                                           self.testing_non_face_haar_features))
+        for idx, img_features in tqdm(enumerate(testing_features), desc="Testing"):
+            has_face = self.predict(img_features)
+            correct_prediction = has_face == correct_labels[idx]
+            if correct_prediction:
+                correct += 1
+                predictions[idx] = 1
+            else:
+                incorrect += 1
+                predictions[idx] = 0
+            # plt.imshow(original_images[idx], cmap="gray")
+            # plt.waitforbuttonpress()
+            print(f"Image {idx} {'' if correct_prediction else 'in'}correctly classified")
+
+        print(
+            f"Correct: {correct}, Incorrect: {incorrect}, Accuracy: "
+            f"{correct / (correct + incorrect)}")
+
+    def test_detection(self):
+        """
+        Test the model
+        """
+        original_images = self.original_testing_images
+        original_images = list(original_images[0].values()) + list(original_images[1].values())
+
+        for idx, img in tqdm(enumerate(original_images), desc="Testing"):
+            for window_size in range(self.window_size[0], min(img.shape[0], img.shape[1])):
+                for x in range(0, img.shape[0] - window_size, 2):
+                    for y in range(0, img.shape[1] - window_size, 2):
+                        window = img[x:x + window_size, y:y + window_size]
+                        gray_window = self.rgb2gray(window)
+                        window_iimage = self.get_integral_image(gray_window)
+                        img_haar_features = self.get_haar_features_helper(self.haar_indices_subset,
+                                                                          window_iimage,
+                                                                          single_iimage=True)
+                        has_face = self.predict(img_haar_features)
+                        if has_face:
+                            img_copy = img.copy()
+                            cv2.rectangle(img_copy, (x, y),
+                                          (x + self.window_size[0], y + self.window_size[1]),
+                                          (255, 0, 0), 1)
+                            # plt.imshow(img_copy, cmap="gray")
+                            # plt.waitforbuttonpress()
+                            print(
+                                f"Face in image {idx} with bbox: "
+                                f"{(x, y, x + self.window_size[0], y + self.window_size[1])}")
+
+    def predict(self, features):
         """
         Predict the faces in the images
+        :param features:
         """
-        pass
+        sum_alpha_h = 0
+        sum_alpha = 0
+        for classifier in self.strong_classifier:
+            if classifier.parity * features[classifier.feature_index] < classifier.parity * \
+                    classifier.threshold:
+                sum_alpha_h += classifier.alpha
+
+            sum_alpha += classifier.alpha
+        return sum_alpha_h >= 0.5 * sum_alpha
 
     def save(self):
         """
@@ -377,10 +458,11 @@ class AdaBoost:
     def get_integral_image(cls, img: np.ndarray) -> np.ndarray:
         """
         Get the integral image from a grayscale image
-        :param img: GRAYSCALE image that should already be scaled to the window size
+        :param img: should already be scaled to the window size
         :return:
         """
-        assert img.ndim == 2 and img.shape[0] == img.shape[1], f"Image shape is not 2: {img.shape}"
+        assert img.ndim == 2 and img.shape[0] == img.shape[1], (f"Image shape is not consistent:"
+                                                                f" {img.shape}")
         # img = cls.rgb2gray(img)
         integral_img = np.cumsum(np.cumsum(img, axis=0), axis=1)
         return integral_img
@@ -447,7 +529,8 @@ class AdaBoost:
 
     @classmethod
     def generate_haar_indices_subset(cls, haar_indices: tuple[np.ndarray, np.ndarray, np.ndarray],
-                                     subset_size=5000) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+                                     subset_size=5_000) -> tuple[np.ndarray, np.ndarray,
+    np.ndarray]:
         """
         Generate a subset of the haar indices, ideally with substantial rectangle sizes
         :param haar_indices:
@@ -483,15 +566,25 @@ class AdaBoost:
     @classmethod
     def display_haar_rectangles(cls, img, features):
         """
-        Display the haar rectangles, currently only supports two-piece haar features
+        Display the haar rectangles, supports *-piece haar features
         :param img:
         :param features:
         :return:
         """
         for i in features:
             random_image = img.copy()
-            cv2.rectangle(random_image, (i[1], i[0]), (i[3], i[2]), (255, 0, 0), 1)
-            cv2.rectangle(random_image, (i[5], i[4]), (i[7], i[6]), (0, 255, 0), 1)
+            if len(i) >= 8:
+                cv2.rectangle(random_image, (i[1], i[0]), (i[3], i[2]), (255, 255, 255), 1)
+                cv2.rectangle(random_image, (i[5], i[4]), (i[7], i[6]), (0, 0, 0), 1)
+            elif len(i) == 12:
+                cv2.rectangle(random_image, (i[1], i[0]), (i[3], i[2]), (255, 255, 255), 1)
+                cv2.rectangle(random_image, (i[5], i[4]), (i[7], i[6]), (0, 0, 0), 1)
+                cv2.rectangle(random_image, (i[9], i[8]), (i[11], i[10]), (255, 255, 255), 1)
+            elif len(i) == 16:
+                cv2.rectangle(random_image, (i[1], i[0]), (i[3], i[2]), (255, 255, 255), 1)
+                cv2.rectangle(random_image, (i[5], i[4]), (i[7], i[6]), (0, 0, 0), 1)
+                cv2.rectangle(random_image, (i[9], i[8]), (i[11], i[10]), (0, 0, 0), 1)
+                cv2.rectangle(random_image, (i[13], i[12]), (i[15], i[14]), (255, 255, 255), 1)
             plt.imshow(random_image, cmap="gray")
             plt.waitforbuttonpress()
 
@@ -530,48 +623,72 @@ class AdaBoost:
     @classmethod
     def get_haar_features_helper(cls,
                                  haar_indices_subset: tuple[np.ndarray, np.ndarray, np.ndarray],
-                                 iimages: np.ndarray) -> np.ndarray:
+                                 iimages: np.ndarray, single_iimage: bool = False) -> np.ndarray:
         """
         Helper function for get_haar_features
         :param haar_indices_subset:
         :param iimages:
+        :param single_iimage:
         :return:
         """
-        haar_features = np.zeros((len(iimages), sum([arr.shape[0] for arr in haar_indices_subset])))
+        if single_iimage:
+            haar_features = np.zeros(sum([arr.shape[0] for arr in haar_indices_subset]))
+            coord_idx = 0
+            for coord_type in haar_indices_subset:
+                for coord_set in coord_type:
+                    feature = cls.get_haar_feature(iimages, coord_set)
+                    haar_features[coord_idx] = feature
 
-        feature = None
+                    coord_idx += 1
+            return haar_features
+
+        haar_features = np.zeros((len(iimages), sum([arr.shape[0] for arr in haar_indices_subset])))
         for img_idx, ii in tqdm(enumerate(iimages), desc=f"Computing Haar Features"):
             coord_idx = 0
             for coord_type in haar_indices_subset:
                 for coord_set in coord_type:
-                    # 2 Rectangles
-                    if len(coord_set) == 8:
-                        rect1 = cls.area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
-                        rect2 = cls.area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
-                        feature = rect2 - rect1
-                    # 3 Rectangles
-                    elif len(coord_set) == 12:
-                        rect1 = cls.area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
-                        rect2 = cls.area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
-                        rect3 = cls.area(ii, coord_set[8], coord_set[9], coord_set[10],
-                                         coord_set[11])
-                        feature = rect2 - rect1 - rect3
-                    # 4 Rectangles
-                    elif len(coord_set) == 16:
-                        rect1 = cls.area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
-                        rect2 = cls.area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
-                        rect3 = cls.area(ii, coord_set[8], coord_set[9], coord_set[10],
-                                         coord_set[11])
-                        rect4 = cls.area(ii, coord_set[12], coord_set[13], coord_set[14],
-                                         coord_set[15])
-                        feature = rect2 + rect4 - rect1 - rect3
-                    else:
-                        AssertionError(f"Invalid Haar Feature: {coord_set}")
+                    feature = cls.get_haar_feature(ii, coord_set)
                     haar_features[img_idx, coord_idx] = feature
 
                     coord_idx += 1
         haar_features = np.array(haar_features)
         return haar_features
+
+    @classmethod
+    def get_haar_feature(cls, ii: np.ndarray, coord_set: np.ndarray) -> float:
+        """
+        Get the haar feature from the integral image
+        :param ii:
+        :param coord_set:
+        :return:
+        """
+        feature = None
+        # 2 Rectangles
+        if len(coord_set) == 8:
+            rect1 = cls.area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
+            rect2 = cls.area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
+            feature = rect2 - rect1
+        # 3 Rectangles
+        elif len(coord_set) == 12:
+            rect1 = cls.area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
+            rect2 = cls.area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
+            rect3 = cls.area(ii, coord_set[8], coord_set[9], coord_set[10],
+                             coord_set[11])
+            feature = rect2 - rect1 - rect3
+        # 4 Rectangles
+        elif len(coord_set) == 16:
+            rect1 = cls.area(ii, coord_set[0], coord_set[1], coord_set[2], coord_set[3])
+            rect2 = cls.area(ii, coord_set[4], coord_set[5], coord_set[6], coord_set[7])
+            rect3 = cls.area(ii, coord_set[8], coord_set[9], coord_set[10],
+                             coord_set[11])
+            rect4 = cls.area(ii, coord_set[12], coord_set[13], coord_set[14],
+                             coord_set[15])
+            feature = rect2 + rect4 - rect1 - rect3
+        else:
+            AssertionError(f"Invalid Haar Feature: {coord_set}")
+
+        assert feature is not None, f"Feature is None: {coord_set}"
+        return feature
 
     @classmethod
     def area(cls, ii, y1, x1, y2, x2):
@@ -609,7 +726,7 @@ class DecisionStump:
         :return:
         """
         return (self.parity is not None and self.feature_index is not None and self.threshold !=
-                np.inf and self.error != np.inf and self.alpha != np.inf)
+                np.inf and self.error != np.inf and (self.alpha != np.inf and self.alpha != 0))
 
     def __str__(self):
         """
@@ -621,7 +738,14 @@ class DecisionStump:
 
 
 if __name__ == "__main__":
-    tr_folds, te_folds = LoadImages.load_folds()
-    tr_images, te_images = LoadImages.load_images(np.concatenate((tr_folds, te_folds)))
-    model = AdaBoost(tr_folds, tr_images, te_folds, te_images, window_size=(24, 24))
-    model.train()
+    if os.path.isfile(f"{LoadImages.CACHE_PATH}/model.pkl"):
+        model = load_model()
+    else:
+        tr_folds, te_folds = LoadImages.load_folds()
+        tr_images, te_images = LoadImages.load_images(np.concatenate((tr_folds, te_folds)))
+        model = AdaBoost(tr_folds, tr_images, te_folds, te_images, window_size=(24, 24))
+        model.train()
+        model.save()
+    model.show_haar_rectangles()
+    model.test_classification()
+    # model.test_detection()
