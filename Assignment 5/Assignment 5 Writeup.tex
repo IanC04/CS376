@@ -6,6 +6,8 @@
 
 % Packages
 \usepackage{amsmath}
+\usepackage{graphics}
+\usepackage{graphicx}
 
 \title{Assignment 5 Writeup}
 \author{Ian Chen}
@@ -18,10 +20,19 @@
     \section{Face Detection}
     
     \begin{itemize}
-    \item \textit{Face Classification}
+    \item \textit{Face Classification}\newline
+    I used the Viola-Jones algorithm, which uses AdaBoosting to train a strong classifier from a
+    subset of Haar-like features. The algorithm is able to achieve a high detection rate while
+    minimizing the number of false positives.
     % TODO: Answer
 
-    \item \textit{Sliding Window + Human Classification}
+    \item \textit{Sliding Window + Human Classification}\newline
+    I used the Viola-Jones algorithm along with the classifier cascade. The algorithm is also
+    able to run in real time, as I used the classifier cascade to quickly reject non-face regions.\newline
+    \includegraphics[width=0.3\textwidth]{Output Pictures/ex_1}
+    \includegraphics[width=0.3\textwidth]{Output Pictures/ex_2}
+    \includegraphics[width=0.3\textwidth]{Output Pictures/ex_3}
+
     % TODO: Answer
 
     \end{itemize}
