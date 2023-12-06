@@ -2,6 +2,7 @@
 Written by Ian Chen on 11/25/2023
 GitHub: https://github.com/IanC04
 """
+import math
 import os
 import cv2
 import numpy as np
@@ -9,18 +10,6 @@ from matplotlib import pyplot as plt
 from tqdm import tqdm
 
 import LoadImages
-
-
-def load_model():
-    """
-    Load the model
-    """
-    import pickle
-    with open(f"{LoadImages.CACHE_PATH}/model.pkl", "rb") as f:
-        print("Loading model...")
-        m = pickle.load(f)
-    del pickle
-    return m
 
 
 class AdaBoost:
@@ -77,6 +66,7 @@ class AdaBoost:
 
         # Initialized after training
         self.strong_classifier = None
+        self.classifier_cascade = None
 
     @classmethod
     def generate_gray_and_scaled_faces(cls, file_name, folds, images, window_size: tuple) -> (
@@ -238,7 +228,9 @@ class AdaBoost:
                 np.save(f, self.strong_classifier)
                 print(f"Saved Strong Classifier to Cache")
 
-    def get_best_feature(self, labels, all_features, weights):
+        self.create_cascade()
+
+    def get_best_feature(self, labels, all_features, weights) -> 'DecisionStump':
         """
         Get the best feature from the images
         Section 3 of AdaBoost paper employs an AdaBoosting algorithm
@@ -249,6 +241,7 @@ class AdaBoost:
         :return:
         """
         weak_classifier = DecisionStump()
+
         # Get the best feature
         for idx in tqdm(range(len(all_features[0])), desc="Getting best feature", position=1,
                         leave=False):
@@ -295,8 +288,9 @@ class AdaBoost:
         parity = 1
         for f, l, w in sorted_data:
             # Amount of misclassified weights
-            error = min(sum_neg_weights + (total_pos_weights - sum_pos_weights),
-                        sum_pos_weights + (total_neg_weights - sum_neg_weights))
+            error_n = sum_neg_weights + (total_pos_weights - sum_pos_weights)
+            error_p = sum_pos_weights + (total_neg_weights - sum_neg_weights)
+            error = min(error_n, error_p)
 
             # # Equivalent to above
             # error_2 = sum_neg_weights + (total_pos_weights - sum_pos_weights)
@@ -308,7 +302,7 @@ class AdaBoost:
             assert 0 < error <= 0.5, (
                 f"Error is not in [0, 0.5]: {error} for feature: {feature_index}")
             if error < classifier.error:
-                classifier.parity = 1 if pos_seen > neg_seen else 0
+                classifier.parity = 1 if pos_seen > neg_seen else -1
                 classifier.feature_index = feature_index
                 classifier.threshold = f
                 classifier.error = error
@@ -321,18 +315,6 @@ class AdaBoost:
                 sum_pos_weights += w
         # end = timeit.timeit()
         # print(end - start)
-
-    def get_best_weak_classifier(self, weak_classifiers):
-        """
-        Get the best weak classifier
-        :param weak_classifiers:
-        :return:
-        """
-        best_weak_classifier = weak_classifiers[0]
-        for weak_classifier in weak_classifiers:
-            if weak_classifier.unweighted_error < best_weak_classifier.unweighted_error:
-                best_weak_classifier = weak_classifier
-        return best_weak_classifier
 
     def test_classification(self):
         """
@@ -367,37 +349,6 @@ class AdaBoost:
             f"Correct: {correct}, Incorrect: {incorrect}, Accuracy: "
             f"{correct / (correct + incorrect)}")
 
-    def test_detection(self):
-        """
-        Test the model
-        """
-        original_images = self.original_testing_images
-        original_images = list(original_images[0].values()) + list(original_images[1].values())
-
-        sum_alpha = sum([classifier.alpha for classifier in self.strong_classifier])
-
-        for idx, img in tqdm(enumerate(original_images), desc="Testing"):
-            for window_size in range(self.window_size[0], min(img.shape[0], img.shape[1])):
-                for x in range(0, img.shape[0] - window_size, 2):
-                    for y in range(0, img.shape[1] - window_size, 2):
-                        window = img[x:x + window_size, y:y + window_size]
-                        gray_window = self.rgb2gray(window)
-                        window_iimage = self.get_integral_image(gray_window)
-                        img_haar_features = self.get_haar_features_helper(self.haar_indices_subset,
-                                                                          window_iimage,
-                                                                          single_iimage=True)
-                        has_face = self.predict(img_haar_features, sum_alpha)
-                        if has_face:
-                            img_copy = img.copy()
-                            cv2.rectangle(img_copy, (x, y),
-                                          (x + self.window_size[0], y + self.window_size[1]),
-                                          (255, 0, 0), 1)
-                            # plt.imshow(img_copy, cmap="gray")
-                            # plt.waitforbuttonpress()
-                            print(
-                                f"Face in image {idx} with bbox: "
-                                f"{(x, y, x + self.window_size[0], y + self.window_size[1])}")
-
     def predict(self, features, sum_alpha):
         """
         Predict the faces in the images
@@ -410,6 +361,80 @@ class AdaBoost:
                     classifier.threshold:
                 sum_alpha_h += classifier.alpha
         return sum_alpha_h >= 0.5 * sum_alpha
+
+    def test_detection(self):
+        """
+        Test the model
+        """
+        original_images = self.original_testing_images
+        original_images = list(original_images[0].values()) + list(original_images[1].values())
+
+        sum_alpha = sum([classifier.alpha for classifier in self.strong_classifier])
+
+        for idx, img in tqdm(enumerate(original_images), desc="Testing", position=0):
+            for window_size in tqdm(range(self.window_size[0], min(img.shape[0], img.shape[1]),
+                                          int(self.window_size[0] * 1.25)),
+                                    desc=f"Checking window", position=1):
+                for x in range(0, img.shape[0] - window_size, self.window_size[0]):
+                    for y in range(0, img.shape[1] - window_size, self.window_size[1]):
+                        window = img[x:x + window_size, y:y + window_size]
+                        gray_window = cv2.resize(self.rgb2gray(window), self.window_size)
+                        window_iimage = self.get_integral_image(gray_window)
+                        img_haar_features = self.get_haar_features_helper(self.haar_indices_subset,
+                                                                          window_iimage,
+                                                                          single_iimage=True)
+                        # has_face = self.predict(img_haar_features, sum_alpha)
+                        has_face = self.cascade_verification(img_haar_features)
+                        if has_face:
+                            img_copy = img.copy()
+                            cv2.rectangle(img_copy, (x, y),
+                                          (x + self.window_size[0], y + self.window_size[1]),
+                                          (255, 0, 0), 1)
+                            plt.imshow(img_copy, cmap="gray")
+                            plt.waitforbuttonpress()
+                            print(
+                                f"Face in image {idx} with bbox: "
+                                f"{(x, y, x + self.window_size[0], y + self.window_size[1])}")
+
+    def cascade_verification(self, img_features):
+        """
+        Verify the cascade
+        :param img_features:
+        """
+        for stage in self.classifier_cascade:
+            for classifier in stage:
+                if not classifier.parity * img_features[
+                    classifier.feature_index] < classifier.parity * \
+                       classifier.threshold:
+                    return False
+
+        return True
+
+    def create_cascade(self):
+        """
+        Create the cascade
+        """
+        if False and os.path.isfile(f"{LoadImages.CACHE_PATH}/classifier_cascade.npy"):
+            with open(f"{LoadImages.CACHE_PATH}/classifier_cascade.npy", "rb") as f:
+                print(f"Cache found. Loading Cascade...")
+                self.classifier_cascade = np.load(f, allow_pickle=True)
+        else:
+            stages = math.ceil(np.log(len(self.strong_classifier)))
+            self.classifier_cascade = np.zeros(stages, dtype=object)
+            previous_idx = 0
+            from copy import deepcopy
+            for i in range(stages):
+                stage = self.strong_classifier[previous_idx:previous_idx + (2 ** i)]
+                stage_copy = list()
+                for classifier in stage:
+                    stage_copy.append(deepcopy(classifier))
+                    stage_copy[-1].threshold *= 0.5
+                self.classifier_cascade[i] = stage_copy
+                previous_idx = 2 ** i
+            with open(f"{LoadImages.CACHE_PATH}/classifier_cascade.npy", "wb") as f:
+                np.save(f, self.classifier_cascade)
+                print(f"Saved Classifier Cascade to Cache")
+            del deepcopy
 
     def save(self):
         """
@@ -610,17 +635,17 @@ class AdaBoost:
         for i in features:
             random_image = img.copy()
             if len(i) >= 8:
-                cv2.rectangle(random_image, (i[1], i[0]), (i[3], i[2]), (255, 255, 255), 1)
-                cv2.rectangle(random_image, (i[5], i[4]), (i[7], i[6]), (0, 0, 0), 1)
+                cv2.rectangle(random_image, (i[1], i[0]), (i[3], i[2]), (255, 255, 255), -1)
+                cv2.rectangle(random_image, (i[5], i[4]), (i[7], i[6]), (0, 0, 0), -1)
             elif len(i) == 12:
-                cv2.rectangle(random_image, (i[1], i[0]), (i[3], i[2]), (255, 255, 255), 1)
-                cv2.rectangle(random_image, (i[5], i[4]), (i[7], i[6]), (0, 0, 0), 1)
-                cv2.rectangle(random_image, (i[9], i[8]), (i[11], i[10]), (255, 255, 255), 1)
+                cv2.rectangle(random_image, (i[1], i[0]), (i[3], i[2]), (255, 255, 255), -1)
+                cv2.rectangle(random_image, (i[5], i[4]), (i[7], i[6]), (0, 0, 0), -1)
+                cv2.rectangle(random_image, (i[9], i[8]), (i[11], i[10]), (255, 255, 255), -1)
             elif len(i) == 16:
-                cv2.rectangle(random_image, (i[1], i[0]), (i[3], i[2]), (255, 255, 255), 1)
-                cv2.rectangle(random_image, (i[5], i[4]), (i[7], i[6]), (0, 0, 0), 1)
-                cv2.rectangle(random_image, (i[9], i[8]), (i[11], i[10]), (0, 0, 0), 1)
-                cv2.rectangle(random_image, (i[13], i[12]), (i[15], i[14]), (255, 255, 255), 1)
+                cv2.rectangle(random_image, (i[1], i[0]), (i[3], i[2]), (255, 255, 255), -1)
+                cv2.rectangle(random_image, (i[5], i[4]), (i[7], i[6]), (0, 0, 0), -1)
+                cv2.rectangle(random_image, (i[9], i[8]), (i[11], i[10]), (0, 0, 0), -1)
+                cv2.rectangle(random_image, (i[13], i[12]), (i[15], i[14]), (255, 255, 255), -1)
             plt.imshow(random_image, cmap="gray")
             plt.waitforbuttonpress()
 
@@ -743,6 +768,33 @@ class AdaBoost:
         bl = ii[y2, x1 - 1] if x1 > 0 else 0
         return (br + tl) - (tr + bl)
 
+    @staticmethod
+    def load_model():
+        """
+        Load the model
+        """
+        import pickle
+        with open(f"{LoadImages.CACHE_PATH}/model.pkl", "rb") as f:
+            print("Loading model...")
+            m = pickle.load(f)
+        del pickle
+        return m
+
+    @staticmethod
+    def average_images(images: np.ndarray) -> np.ndarray:
+        """
+        Load the model
+        :return:
+        """
+        total_count = len(images)
+        average_image = np.zeros(images[0].shape)
+
+        for image in images:
+            average_image += image
+
+        average_image /= total_count
+        return average_image
+
 
 class DecisionStump:
     """
@@ -775,13 +827,23 @@ class DecisionStump:
 
 if __name__ == "__main__":
     if os.path.isfile(f"{LoadImages.CACHE_PATH}/model.pkl"):
-        model = load_model()
+        model = AdaBoost.load_model()
+        # plt.imshow(model.average_images(model.training_faces), cmap="gray")
+        # plt.waitforbuttonpress()
+        # plt.imshow(model.average_images(model.training_non_faces), cmap="gray")
+        # plt.waitforbuttonpress()
+        # plt.imshow(model.average_images(model.testing_faces), cmap="gray")
+        # plt.waitforbuttonpress()
+        # plt.imshow(model.average_images(model.testing_non_faces), cmap="gray")
+        # plt.waitforbuttonpress()
     else:
         tr_folds, te_folds = LoadImages.load_folds()
         tr_images, te_images = LoadImages.load_images(np.concatenate((tr_folds, te_folds)))
         model = AdaBoost(tr_folds, tr_images, te_folds, te_images, window_size=(24, 24))
         model.train()
         model.save()
+    # model.create_cascade()
+    # model.save()
     # model.show_features()
     model.test_classification()
     # model.test_detection()
