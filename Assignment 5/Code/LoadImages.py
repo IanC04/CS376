@@ -143,5 +143,6 @@ if __name__ == "__main__":
     tr_folds, te_folds = load_folds()
     tr_images, te_images = load_images(np.concatenate((tr_folds, te_folds)))
     print("Retrieved all FDDB data.")
-    show_bbox(np.concatenate((tr_folds, te_folds)), np.concatenate((tr_images, te_images)),
-              paths=None)
+    # show_bbox(np.concatenate((tr_folds, te_folds)), np.concatenate((tr_images, te_images)),
+    #           paths=None)
+    # show_bbox(te_folds, te_images, paths = None)
