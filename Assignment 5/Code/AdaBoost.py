@@ -42,6 +42,8 @@ class AdaBoost:
         shown
         Inspired by https://citeseerx.ist.psu.edu/document?repid=rep1&type=pdf&doi
         =d0ea54f1a97a1922c679f88c6167328da472a259
+        
+        TODO: Maybe need to normalize the images
         """
         self.training_faces, self.training_non_faces = self.generate_gray_and_scaled_faces(
             "training", self.original_training_folds, self.original_training_images,
@@ -188,7 +190,7 @@ class AdaBoost:
                 # plt.waitforbuttonpress()
         return non_faces
 
-    def train(self, number_of_classifiers=10):
+    def train(self, number_of_classifiers=15):
         """
         Train the model
         TODO: 511=2^9-1 or 127=2^7-1
@@ -221,6 +223,7 @@ class AdaBoost:
                 # Get the best feature
                 best_weak_classifier = self.get_best_feature(training_labels, training_features,
                                                              weights)
+                print(best_weak_classifier)
                 strong_classifier.append(best_weak_classifier)
 
             self.strong_classifier = np.array(strong_classifier)
@@ -240,37 +243,63 @@ class AdaBoost:
         :param weights:
         :return:
         """
-        weak_classifier = DecisionStump()
 
+        weak_classifiers = list()
         # Get the best feature
         for idx in tqdm(range(len(all_features[0])), desc="Getting best feature", position=1,
                         leave=False):
             feature = all_features[:, idx].flatten()
             sum_non_face_weights = np.sum(weights[labels == 0])
             sum_face_weights = np.sum(weights[labels == 1])
-            self.train_weak_classifier(weak_classifier, labels, feature, idx, weights,
-                                       sum_non_face_weights, sum_face_weights)
+            weak_classifier = self.train_weak_classifier(labels, feature, idx, weights,
+                                                         sum_non_face_weights, sum_face_weights)
+            weak_classifiers.append(weak_classifier)
 
-        beta = weak_classifier.error / (1 - weak_classifier.error)
-        assert 0 < beta < 1, f"Beta is {beta} for feature: {weak_classifier.feature_index}"
-        weak_classifier.alpha = -np.log(1 / beta)
-        assert weak_classifier.valid(), f"Weak Classifier is not valid: {weak_classifier}"
+        best_weak_classifier = self.select_best_classifier(weak_classifiers, all_features,
+                                                           weights, labels)
+        beta = best_weak_classifier.error / (1 - best_weak_classifier.error)
+        assert 0 < beta < 1, f"Beta is {beta} for feature: {best_weak_classifier.feature_index}"
+        best_weak_classifier.alpha = -np.log(1 / beta)
+        assert best_weak_classifier.valid(), f"Weak Classifier is not valid: {best_weak_classifier}"
 
         # Update weights
         predictions = np.zeros(len(all_features))
-        predictions[weak_classifier.parity * all_features[:, weak_classifier.feature_index] <
-                    weak_classifier.parity * weak_classifier.threshold] = 1
+        predictions[
+            best_weak_classifier.parity * all_features[:, best_weak_classifier.feature_index] <
+            best_weak_classifier.parity * best_weak_classifier.threshold] = 1
 
         weights[predictions == labels] *= beta
-        assert weights.all() >= 0, f"Weights are not greater than 0: {weights}"
+        assert weights.all() >= 0, f"Weights are not greater than 0{weights}"
 
-        return weak_classifier
+        return best_weak_classifier
 
-    def train_weak_classifier(self, classifier, labels, feature, feature_index, weights,
+    def select_best_classifier(self, weak_classifiers, all_features, weights, labels):
+        """
+        Select the best classifier
+        :param weak_classifiers:
+        :param all_features:
+        :param weights:
+        :param labels:
+        :return:
+        """
+        assert len(weak_classifiers) > 0, "No weak classifiers"
+        best_weak_classifier = weak_classifiers[0]
+        for weak_classifier in weak_classifiers:
+            # Get the error
+            predictions = np.zeros(len(labels))
+            predictions[weak_classifier.parity * all_features[:, weak_classifier.feature_index] <
+                        weak_classifier.parity * weak_classifier.threshold] = 1
+            error = np.sum(weights[predictions != labels])
+            if error < best_weak_classifier.error:
+                best_weak_classifier = weak_classifier
+
+        assert best_weak_classifier is not None, "Best weak classifier is None"
+        return best_weak_classifier
+
+    def train_weak_classifier(self, labels, feature, feature_index, weights,
                               total_neg_weights, total_pos_weights):
         """
         Train the weak classifier by getting the best threshold
-        :param classifier:
         :param labels:
         :param feature:
         :param feature_index:
@@ -279,6 +308,7 @@ class AdaBoost:
         :param total_pos_weights:
         :return:
         """
+        classifier = DecisionStump()
         # start = timeit.timeit()
         # Get the best threshold using optimized algorithm
         sorted_data = np.array(sorted(zip(feature, labels, weights), key=lambda x: x[0]))
@@ -315,6 +345,7 @@ class AdaBoost:
                 sum_pos_weights += w
         # end = timeit.timeit()
         # print(end - start)
+        return classifier
 
     def test_classification(self):
         """
@@ -339,8 +370,6 @@ class AdaBoost:
             else:
                 incorrect += 1
             predictions[idx] = has_face
-            # if idx >= 1035:
-            #     pass
             # plt.imshow(original_images[idx], cmap="gray")
             # plt.waitforbuttonpress()
             print(f"Image {idx} {'' if correct_prediction else 'in'}correctly classified")
@@ -398,7 +427,7 @@ class AdaBoost:
 
     def cascade_verification(self, img_features):
         """
-        Verify the cascade
+        Faster verification of the cascade
         :param img_features:
         """
         for stage in self.classifier_cascade:
@@ -407,7 +436,6 @@ class AdaBoost:
                     classifier.feature_index] < classifier.parity * \
                        classifier.threshold:
                     return False
-
         return True
 
     def create_cascade(self):
@@ -428,13 +456,20 @@ class AdaBoost:
                 stage_copy = list()
                 for classifier in stage:
                     stage_copy.append(deepcopy(classifier))
-                    stage_copy[-1].threshold *= 0.5
+                    stage_copy[-1].threshold = self.get_threshold(stage_copy[-1])
                 self.classifier_cascade[i] = stage_copy
                 previous_idx = 2 ** i
             with open(f"{LoadImages.CACHE_PATH}/classifier_cascade.npy", "wb") as f:
                 np.save(f, self.classifier_cascade)
                 print(f"Saved Classifier Cascade to Cache")
             del deepcopy
+
+    def get_threshold(self, classifier, fp_rate=0.99):
+        """
+        Get the threshold for the classifier
+        :param fp_rate:
+        """
+        return 0.5 * classifier.threshold
 
     def save(self):
         """
@@ -821,7 +856,7 @@ class DecisionStump:
         String representation of the Decision Stump
         :return:
         """
-        return f"DecisionStump(parity={self.parity}, feature_index={self.feature_index}, " \
+        return f"Decision Stump: (parity={self.parity}, feature_index={self.feature_index}, " \
                f"threshold={self.threshold}, error={self.error}, alpha={self.alpha})"
 
 
@@ -842,8 +877,6 @@ if __name__ == "__main__":
         model = AdaBoost(tr_folds, tr_images, te_folds, te_images, window_size=(24, 24))
         model.train()
         model.save()
-    # model.create_cascade()
-    # model.save()
-    # model.show_features()
+    model.show_features()
     model.test_classification()
     # model.test_detection()
